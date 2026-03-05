@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Nova proba{% endblock %}
+
+{% block content %}
+
+<!-- WRAPPER -->
+<div style="
+    margin:auto;
+    padding:20px;
+">
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top:88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <!-- LEFT: TITLE -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-probe"></span>
+       Proba
+    </div>
+
+</div>
+
+<h3 style="
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:500;
+    padding:16px;
+    color:#777;
+    font-size:16px;
+">
+    Izradi novu probu
+</h3>
+    <!-- FORMA -->
+    <form method="post" id="probeForm">
+    <!-- NAZIV PROBE -->
+    <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+        Naziv *
+    </label>
+    <input
+        type="text"
+        name="name"
+        form="probeForm"
+        placeholder="npr. Proba, Vježba, Generalka"
+        required
+        style="
+            width:100%;
+            height:48px;
+            border-radius:12px;
+            background:#111;
+            border:1px solid #333;
+            color:#fff;
+            padding:0 14px;
+            font-size:16px;
+            margin-bottom:16px;
+        "
+    >
+
+        <!-- DATUM -->
+        <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+            Datum *
+        </label>
+        <input
+            type="date"
+            name="date"
+            required
+            style="
+                width:100%;
+                height:48px;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:16px;
+            "
+        >
+
+        <!-- NAPOMENA -->
+        <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+            Napomena
+        </label>
+        <input
+            type="text"
+            name="note"
+            placeholder="npr. nova fešta, svadba, jazz session"
+            style="
+                width:100%;
+                height:48px;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:20px;
+            "
+        >
+
+        <!-- GUMB -->
+        <div style="text-align:center;">
+            <button
+                type="submit"
+                style="
+                    display:inline-flex;
+                    padding:10px 16px;
+                    gap:8px;
+                    background:#14532d;
+                    border:1px solid #333;
+                    color:#fff;
+                    border-radius:12px;
+                    font-weight:500;
+                    font-size:16px;
+                    cursor:pointer;
+                "
+            ><span style="
+            width:18px;
+            height:18px;
+            display:inline-block;
+            background-color:currentColor;
+    
+            mask-image:url('/static/icons/create.svg');
+            -webkit-mask-image:url('/static/icons/create.svg');
+            mask-repeat:no-repeat;
+            -webkit-mask-repeat:no-repeat;
+            mask-position:center;
+            -webkit-mask-position:center;
+            mask-size:contain;
+            -webkit-mask-size:contain;
+        "></span>
+                
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

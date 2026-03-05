@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Postavke{% endblock %}
+
+{% block content %}
+<div style="padding:24px">
+
+    <h3 style="margin-bottom:16px;
+               font-size:22px;
+               font-weight:800;
+               display:flex;
+               align-items:center;
+               gap:10px;"
+               >
+         <span class="icon icon-theme"></span>
+        Tema
+    </h3>
+
+    <form method="post">
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <input type="radio" name="theme" value="dark" checked>
+            Tamno (zadano)
+        </label>
+
+<!-- <div style="display:flex;justify-content:flex-start;margin-top:20px; border-bottom:1px solid #222;padding:10px 16px;">
+    <button type="submit"
+            style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#fff;
+        color:#111;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:0;
+        outline:none;
+        box-shadow:none;
+        appearance:none;
+        -webkit-appearance:none;
+            ">
+        <span class="icon icon-save"
+              style="width:16px;height:16px;"></span>
+    </button>
+</div> -->
+    </form>
+
+</div>
+{% endblock %}

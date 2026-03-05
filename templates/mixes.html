@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}Mixevi{% endblock %}
+
+{% block content %}
+
+<!-- TOOLBAR -->
+<div style="
+    position:sticky;
+    top: 88px;
+    z-index:10;
+    background:#000;
+    padding:10px 16px;
+    border-bottom:1px solid #222;
+">
+<form method="get"
+style="display:flex;align-items:flex-start;gap:10px;">
+
+<!-- LEFT SPACER (balans) -->
+<div style="width:48px;"></div>
+
+<!-- CENTER -->
+<div style="flex:1; display:flex; justify-content:center; gap:10px;">
+
+    <input type="text" name="q"
+      value="{{ filters.q or '' }}"
+      placeholder="🔍 Traži mix, pjesmu ili izvođača"
+      style="
+      max-width:420px;
+      width:100%;
+      height:48px;
+      min-height:48px;
+      border-radius:12px;
+      background:#111;
+      border:1px solid #333;
+      color:#fff;
+      font-size:16px;
+      padding:10px 16px;
+      ">
+
+{% if filters_open %}
+  <a href="{{ request.path }}"
+   style="
+        height:48px;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:0 16px;
+        background:#fff;
+        color:#000;
+        border-radius:12px;
+        font-weight:600;
+        text-decoration:none;
+        
+   ">
+    <span class="icon icon-close"></span>
+    Zatvori
+</a>
+
+  {% else %}
+  <a href="{{ request.path }}?filters=1"
+   style="
+        height:48px;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:0 16px;              /* ⬅️ KLJUČ */
+        background:#111;
+        border:1px solid #333;
+        color:#fff;
+        border-radius:12px;
+        font-weight:600;
+        text-decoration:none;
+   ">
+    <span class="icon icon-filter"></span>
+    Filtriraj
+</a>
+
+  {% endif %}
+</div>
+<!-- RIGHT -->
+<a href="/mix/new" class="action-btn add"
+   style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#111;
+        color:#fff;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:1px solid #333;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+
+</form>
+</div>
+
+<!-- FILTERI -->
+<div style="
+display:{{ 'block' if filters_open else 'none' }};
+background:#000;padding:16px;border-bottom:1px solid #222;
+">
+
+<!-- ORIGIN -->
+<div style="display:flex;gap:10px;margin-bottom:14px;">
+{% for o in ["Domaće","Strano"] %}
+<form method="get">
+{% for k,v in filters.items() if k!='origin' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.origin!=o %}name="origin" value="{{o}}"{% endif %}
+style="
+min-height:48px;padding:14px 22px;
+font-size:16px;font-weight:700;
+border-radius:14px;border:1px solid #8a7a00;
+background:{% if filters.origin==o %}#ffd500{% else %}#000{% endif %};
+color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
+">
+{{ o }}
+</button>
+</form>
+{% endfor %}
+</div>
+
+<!-- VOCAL -->
+<div style="display:flex;gap:10px;margin-bottom:14px;">
+{% for v in ["Muško","Žensko","Duet"] %}
+<form method="get">
+{% for k,vv in filters.items() if k!='vocal' and vv %}
+<input type="hidden" name="{{k}}" value="{{vv}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.vocal!=v %}name="vocal" value="{{v}}"{% endif %}
+style="
+min-height:48px;
+padding:14px 22px;
+font-size:16px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #6b21a8;
+background:{% if filters.vocal==v %}#a855f7{% else %}#000{% endif %};
+color:{% if filters.vocal==v %}#000{% else %}#d8b4fe{% endif %};
+">
+{{ v }}
+</button>
+</form>
+{% endfor %}
+</div>
+
+<!-- TEMPO + INSTR -->
+<div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+
+{% for t in ["Spora","Srednja","Brza"] %}
+<form method="get">
+{% for k,v in filters.items() if k!='tempo' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.tempo!=t %}name="tempo" value="{{t}}"{% endif %}
+style="
+min-height:48px;padding:14px 20px;
+font-size:16px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #2a3b55;
+background:{% if filters.tempo==t %}#2a6cff{% else %}#000{% endif %};
+color:{% if filters.tempo==t %}#fff{% else %}#8aa4d6{% endif %};
+">
+{{ t }}
+</button>
+</form>
+{% endfor %}
+
+<form method="get" style="margin-left:auto;">
+{% for k,v in filters.items() if k!='instrumental' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.instrumental!="1" %}name="instrumental" value="1"{% endif %}
+style="
+min-height:48px;padding:14px 26px;
+font-size:16px;font-weight:800;
+border-radius:14px;border:1px solid #00ffe1;
+background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#000{% endif %};
+color:{% if filters.instrumental=="1" %}#000{% else %}#00ffe1{% endif %};
+">
+🎹 INSTR
+</button>
+</form>
+
+</div>
+
+<!-- GENRE -->
+<div style="margin-bottom:14px;">
+{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky", "Jazzy"] %}
+<form method="get" style="display:inline;">
+{% for k,v in filters.items() if k!='genre' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.genre!=g %}name="genre" value="{{g}}"{% endif %}
+style="
+min-height:48px;padding:14px 22px;
+font-size:16px;font-weight:600;
+margin-right:8px;margin-bottom:8px;
+border-radius:16px;border:1px solid #5a2a2a;
+background:{% if filters.genre==g %}#ff5a5a{% else %}#000{% endif %};
+color:{% if filters.genre==g %}#fff{% else %}#ff9a9a{% endif %};
+">
+{{ g }}
+</button>
+</form>
+{% endfor %}
+</div>
+
+<!-- REGIJA -->
+<div>
+{% for r in ["Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BIH"] %}
+<form method="get" style="display:inline;">
+{% for k,v in filters.items() if k!='regija' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+<input type="hidden" name="filters" value="1">
+<button {% if filters.regija!=r %}name="regija" value="{{r}}"{% endif %}
+style="
+min-height:48px;padding:14px 22px;
+font-size:16px;font-weight:600;
+margin-right:8px;margin-bottom:8px;
+border-radius:16px;border:1px solid #2a5a3a;
+background:{% if filters.regija==r %}#2ecc71{% else %}#000{% endif %};
+color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
+">
+{{ r }}
+</button>
+</form>
+{% endfor %}
+</div>
+
+</div>
+
+<!-- LISTA MIXEVA -->
+<div class="list">
+{% for mix in mixes %}
+<div class="song-row">
+    <a class="song-main" href="/mix/{{ mix.id }}">
+        <div class="title" style="display:flex;align-items:center;gap:8px;">
+            <span class="icon icon-mix"></span>
+            {{ mix.name }}
+        </div>
+        {% if mix.is_new %}
+        <span style="
+            font-size:11px;
+            font-weight:700;
+            background:#ffd500;
+            color:#000;
+            padding:2px 6px;
+            border-radius:8px;
+        ">
+            NOVO
+        </span>
+    {% endif %}
+        <div class="meta">
+            Tonalitet: <strong>{{ mix.mix_key or '-' }}</strong><br>
+        
+            {% if mix.song_count > 0 %}
+                {{ mix.song_titles }}<br>
+                {{ mix.song_count }}
+                {{ 'pjesma' if mix.song_count == 1 else 'pjesme' }}
+            {% else %}
+                <span style="color:#777;font-style:italic;">
+                    * nema pjesama *
+                </span>
+            {% endif %}
+        </div>
+    </a>
+    <!-- ACTIONS -->
+    <div style="display:flex;gap:10px;align-items:center;">
+
+      <!-- EDIT -->
+      <a href="/mix/{{ mix.id }}/edit"
+         onclick="event.stopPropagation();"
+         class="action-btn edit">
+          <span class="icon icon-edit"></span>
+      </a>
+
+      <!-- DELETE -->
+      <form method="post"
+            action="/mix/{{ mix.id }}/delete"
+            onsubmit="return confirm('Obrisati ovaj mix?');">
+          <button type="submit" class="action-btn delete">
+              <span class="icon icon-delete"></span>
+          </button>
+      </form>
+
+  </div>
+
+</div>
+{% endfor %}
+</div>
+
+{% endblock %}

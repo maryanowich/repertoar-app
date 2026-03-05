@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Uredi pjesmu{% endblock %}
+
+{% block content %}
+
+<div style=margin:auto;padding:20px;>
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top: 88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <!-- LEFT: TITLE -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-repertoar"></span>
+        {{ song.title  }}
+    </div>
+                <div class="meta">
+                {{ song.artist }}
+            </div>
+ </div>
+
+ <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">   
+    Podaci o pjesmi
+</h3>
+<form method="post">
+
+<!-- GRID -->
+<div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:20px;
+    border-bottom:1px solid #222;
+">
+
+<input name="title" required
+       placeholder="Naziv pjesme *"
+       value="{{ song.title }}">
+
+<input list="artists" name="artist" required
+       placeholder="Izvođač *"
+       value="{{ song.artist }}">
+
+<datalist id="artists">
+    {% for a in artists %}
+        <option value="{{ a.artist }}">
+    {% endfor %}
+</datalist>
+
+<input name="key" required
+       placeholder="Tonalitet *"
+       value="{{ song.key }}">
+
+<select name="tempo" required>
+    <option value="">Tempo *</option>
+    {% for t in ["Spora","Srednja","Brza"] %}
+        <option value="{{ t }}"
+        {% if song.tempo == t %}selected{% endif %}>
+            {{ t }}
+        </option>
+    {% endfor %}
+</select>
+
+<select name="genre" required>
+    <option value="">Genre *</option>
+    {% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+        <option value="{{ g }}"
+        {% if song.genre == g %}selected{% endif %}>
+            {{ g }}
+        </option>
+    {% endfor %}
+</select>
+
+<select name="region" required>
+    <option value="">Regija *</option>
+    {% for r in ["Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BIH"] %}
+        <option value="{{ r }}"
+        {% if song.region == r %}selected{% endif %}>
+            {{ r }}
+        </option>
+    {% endfor %}
+</select>
+
+<select name="vocal" required>
+    <option value="">Vokal *</option>
+    {% for v in ["Muško","Žensko","Duet"] %}
+        <option value="{{ v }}"
+        {% if song.vocal == v %}selected{% endif %}>
+            {{ v }}
+        </option>
+    {% endfor %}
+</select>
+
+<select name="origin" required>
+    <option value="">Domaće / Strano *</option>
+    {% for o in ["Domaće","Strano"] %}
+        <option value="{{ o }}"
+        {% if song.origin == o %}selected{% endif %}>
+            {{ o }}
+        </option>
+    {% endfor %}
+</select>
+
+<select name="theme">
+    <option value="">Tema (opcionalno)</option>
+    {% for t in ["Božić","Halloween"] %}
+        <option value="{{ t }}"
+        {% if song.theme == t %}selected{% endif %}>
+            {{ t }}
+        </option>
+    {% endfor %}
+</select>
+
+</div>
+
+<!-- MIX -->
+<h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">   
+    Mix
+</h3>
+<form method="post">
+
+<select name="planned_mix">
+    <option value="">— bez mixa —</option>
+    {% for m in mixes %}
+        <option value="{{ m.name }}"
+            {% if song.mix_name == m.name %}selected{% endif %}>
+            {{ m.name }}
+        </option>
+    {% endfor %}
+</select>
+
+<input name="planned_mix_new"
+       placeholder="ili novi mix"
+       style="margin-top:8px;">
+
+<input type="number"
+       name="mix_order"
+       min="1"
+       placeholder="Redni broj u miksu"
+       value="{{ song.mix_order if song.mix_order else '' }}"
+       style="margin-top:8px;">
+
+ <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:600; padding: 16px;color: #fff; font-size: 16px;">   
+    Instrumental
+    <input type="checkbox"
+           name="is_instrumental"
+           value="1"
+           {% if song.is_instrumental == 1 %}checked{% endif %}>
+   
+</h3>   
+
+<textarea name="lyrics"
+          placeholder="Lyrics (opcionalno)"
+          style="width:100%;min-height:120px;">{{ song.lyrics }}</textarea>
+
+          <div style="display:flex;justify-content:center;margin-top:24px;">
+            <button type="submit"
+                    style="
+                        padding:10px 16px;
+                        background:#fff;
+                        color:#000;
+                        border-radius:12px;
+                        border:1px solid #ddd;
+                        font-weight:600;
+                        font-size:16px;
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                    ">
+                <span style="
+                    width:18px;
+                    height:18px;
+                    display:inline-block;
+                    background-color:currentColor;
+                    mask-image:url('/static/icons/save.svg');
+                    -webkit-mask-image:url('/static/icons/save.svg');
+                    mask-repeat:no-repeat;
+                    mask-position:center;
+                    mask-size:contain;
+                    -webkit-mask-repeat:no-repeat;
+                    -webkit-mask-position:center;
+                    -webkit-mask-size:contain;
+                "></span>
+                
+            </button>
+        </div>
+        
+
+</form>
+
+</div>
+
+{% endblock %}
+

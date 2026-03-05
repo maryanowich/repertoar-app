@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Nova pjesma{% endblock %}
+
+{% block content %}
+
+<!-- WRAPPER S GRADIENTOM -->
+<div style="
+    margin:auto;
+    padding:20px;
+">
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top:88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <!-- LEFT: TITLE -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-repertoar"></span>
+        Dodaj pjesmu
+    </div>
+
+</div>
+
+ <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">   
+    Podaci o pjesmi
+</h3>
+
+<form method="post" action="/song/add">
+
+<div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:12px;
+">
+
+<input name="title" required placeholder="Naziv pjesme *">
+<input name="artist" required placeholder="Izvođač *">
+<input name="key" required placeholder="Tonalitet (npr. G, Am) *">
+
+<select name="tempo" required>
+    <option value="">Tempo *</option>
+    <option>Spora</option>
+    <option>Srednja</option>
+    <option>Brza</option>
+</select>
+
+<select name="genre" required>
+    <option value="">Tip / Genre *</option>
+    <option>Fešta</option>
+    <option>Party igre</option>
+    <option>Trash</option>
+    <option>Pop / Rock</option>
+    <option>Zabavno</option>
+    <option>Narodno</option>
+    <option>Balada</option>
+    <option>Tambure</option>
+    <option>Domoljubne</option>
+    <option>Funky</option>
+    <option>Jazzy</option>
+</select>
+
+<select name="region" required>
+    <option value="">Regija *</option>
+    <option>Hrvatska</option>
+    <option>Dalmacija</option>
+    <option>Slavonija</option>
+    <option>Istra</option>
+    <option>Zagorje</option>
+    <option>Ex-Yu</option>
+    <option>BiH</option>
+</select>
+
+<select name="vocal" required>
+    <option value="">Vokal *</option>
+    <option>Muško</option>
+    <option>Žensko</option>
+    <option>Duet</option>
+</select>
+
+<select name="origin" required>
+    <option value="">Domaće / Strano *</option>
+    <option>Domaće</option>
+    <option>Strano</option>
+</select>
+
+<select name="theme">
+    <option value="">Tema (opcionalno)</option>
+    <option>Božić</option>
+    <option>Halloween</option>
+</select>
+
+</div>
+
+<!-- MIX BLOK -->
+ 
+<div style="margin-top:20px;">
+
+<h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;"> 
+Planirani mix
+</h3>
+
+<select name="planned_mix">
+    <option value="">— bez mixa —</option>
+    {% for m in mixes %}
+        <option value="{{ m.name }}">{{ m.name }}</option>
+    {% endfor %}
+</select>
+
+<input name="planned_mix_new"
+       placeholder="ili novi mix (npr. Fešta 2026)"
+       style="margin-top:8px;">
+
+<input type="number"
+       name="mix_order"
+       min="1"
+       placeholder="Broj pjesme u miksu (npr. 1)"
+       style="margin-top:8px;">
+</div>
+
+<div style="display: flex; align-items:center; gap: 20px; "></div>
+<h3 style="margin-bottom:12px; padding:16px; display: flex;gap:10px;margin:16px 0;align-items: center;font-size: 16px;">
+    
+    Instrumental
+
+    <input type="checkbox" name="is_instrumental" value="1"
+           style="display:flex;">
+</h3>
+
+<input name="score_pdf" placeholder="PDF partiture (opcionalno)">
+<textarea name="lyrics" placeholder="Lyrics (opcionalno)"></textarea>
+
+<div style="display:flex;justify-content:center;margin-top:20px;">
+    <button type="submit"
+            style="
+                padding:10px 16px;
+                background:#fff;
+                color:#000;
+                border-radius:12px;
+                border:1px solid #ddd;
+                font-weight:600;
+                font-size:16px;
+                display:flex;
+                align-items:center;
+                gap:8px;
+            ">
+        <span class="icon"
+              style="
+                  mask-image:url('/static/icons/plus.svg');
+                  -webkit-mask-image:url('/static/icons/plus.svg');
+                  width:16px;
+                  height:16px;
+              ">
+        </span>
+        
+    </button>
+</div>
+
+
+</div>
+
+</form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}{{ rehearsal.name }}{% endblock %}
+
+{% block content %}
+
+<!-- ACTION BAR (SETLIST DETAIL) -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top: 88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+    <div>
+        <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-probe"></span>
+        {{ rehearsal.name }}
+    </div>
+    
+        <div style="color:#aaa;margin-top:4px;">
+            {{ rehearsal.date[8:10] }}/{{ rehearsal.date[5:7] }}/{{ rehearsal.date[0:4] }}
+            {% if rehearsal.note %} • {{ rehearsal.note }}{% endif %}
+        </div>
+    </div>
+
+    <!-- TOGGLE ADD / EDIT SONG BUTTON -->
+   <button id="toggle-add-btn"
+    onclick="toggleAddSong()"
+    style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#14532d;
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+
+        /* ⬇️ KLJUČNO */
+        border:0;
+        outline:none;
+        box-shadow:none;
+        appearance:none;
+        -webkit-appearance:none;
+        cursor:pointer;
+    ">
+<span style="display:inline-flex;align-items:center;gap:8px;">
+    {% if edit_song %}
+        <span class="icon icon-close" style="color:#ffff;"></span>
+        
+    {% else %}
+        <span class="icon icon-plus" style="color:#fff;"></span>
+        
+    {% endif %}
+</span>
+</button>
+
+</div>
+
+<!-- PJESME NA PROBI -->
+<div class="list">
+
+{% for song in songs %}
+    <div class="song-row"
+         onclick="window.location.href='{% if song.mix_id %}/mix/{{ song.mix_id }}?from={{ request.path }}{% else %}/song/{{ song.id }}?from={{ request.path }}{% endif %}'"
+         style="gap:10px;cursor:pointer;">
+
+        <!-- SONG INFO -->
+        <div class="song-main" style="flex:1;">
+            <div class="title" style="display:flex;align-items:center;gap:8px;">
+                <span class="icon icon-repertoar"></span>
+                {{ song.title }}
+            </div>
+        
+            <div class="meta">
+                {{ song.artist }}
+                • Tonalitet: <strong>{{ song.key }}</strong>
+        
+                {% if song.planned_mix %}
+                    <span style="display:inline-flex;align-items:center;gap:6px;margin-left:6px;">
+                        • <span class="icon icon-mix"></span>
+                        {{ song.planned_mix }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        
+
+        <!-- ACTIONS -->
+<div style="display:flex;gap:6px;align-items:center;">
+
+    {% if song.status != 'repertoar' %}
+        <!-- PUSH TO REPERTOAR (OPASNO, NE MIJENJATI LOGIKU) -->
+        <form method="post"
+              action="/probe/push/{{ song.id }}"
+              onclick="event.stopPropagation();">
+
+            <button class="action-btn check"
+                    title="Pošalji u repertoar">
+                <span class="icon icon-check"></span>
+            </button>
+
+        </form>
+    {% else %}
+        <!-- VEĆ U REPERTOARU -->
+        <div class="action-btn check"
+             style="opacity:.4; cursor:default;"
+             title="Već u repertoaru">
+            <span class="icon icon-check"></span>
+        </div>
+    {% endif %}
+
+    <!-- EDIT -->
+    <a href="/song/{{ song.id }}/edit"
+       onclick="event.stopPropagation();"
+       class="action-btn edit"
+       title="Uredi pjesmu" >
+        <span class="icon icon-edit"></span>
+    </a>
+
+    <!-- DELETE FROM PROBE -->
+    <form method="post"
+          action="/probe/{{ rehearsal.id }}/remove/{{ song.id }}"
+          onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni da želite ukloniti ovu pjesmu s probe?');">
+
+        <button class="action-btn delete"
+                title="Ukloni s probe">
+            <span class="icon icon-delete"></span>
+        </button>
+
+    </form>
+
+</div>
+
+    </div>
+{% endfor %}
+
+{% if songs|length == 0 and not edit_song %}
+    <div id="empty-probe-msg"
+         style="padding:24px;text-align:center;color:#777;">
+        Još nema pjesama na ovoj probi.
+    </div>
+{% endif %}
+
+
+</div>
+
+<!-- ADD / EDIT SONG FORM -->
+<div id="add-song-form"
+     style="
+        display:{% if edit_song %}block{% else %}none{% endif %};
+        padding:10px;
+        border-top:0px solid #222;
+        
+     ">
+
+<form method="post"
+      action="{% if edit_song %}
+                /song/{{ edit_song.id }}/edit
+              {% else %}
+                /probe/{{ rehearsal.id }}/add
+              {% endif %}"
+      {% if edit_song %}onsubmit="return confirm('Želite li spremiti promjene?');"{% endif %}>
+
+<div style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+    {% if edit_song %}Uredi pjesmu{% else %}Nova pjesma za probu{% endif %}
+</div>
+
+<!-- GRID -->
+<div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:12px;
+">
+
+<input name="title" required placeholder="Naziv pjesme *"
+       value="{{ edit_song.title if edit_song else '' }}">
+
+<input list="artists" name="artist" required placeholder="Izvođač *"
+       value="{{ edit_song.artist if edit_song else '' }}">
+
+<datalist id="artists">
+    {% for a in artists %}
+        <option value="{{ a.artist }}">
+    {% endfor %}
+</datalist>
+
+<input name="key" required placeholder="Tonalitet (npr. G, Am) *"
+       value="{{ edit_song.key if edit_song else '' }}">
+
+<select name="tempo" required>
+    <option value="">Tempo *</option>
+    {% for t in ["Spora","Srednja","Brza"] %}
+        <option {% if edit_song and edit_song.tempo==t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+</select>
+
+<select name="genre" required>
+    <option value="">Tip / Genre *</option>
+    {% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+        <option {% if edit_song and edit_song.genre==g %}selected{% endif %}>{{ g }}</option>
+    {% endfor %}
+</select>
+
+<select name="region" required>
+    <option value="">Regija *</option>
+    {% for r in ["Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BiH"] %}
+        <option {% if edit_song and edit_song.region==r %}selected{% endif %}>{{ r }}</option>
+    {% endfor %}
+</select>
+
+<select name="vocal" required>
+    <option value="">Vokal *</option>
+    {% for v in ["Muško","Žensko","Duet"] %}
+        <option {% if edit_song and edit_song.vocal==v %}selected{% endif %}>{{ v }}</option>
+    {% endfor %}
+</select>
+
+<select name="origin" required>
+    <option value="">Domaće / Strano *</option>
+    {% for o in ["Domaće","Strano"] %}
+        <option {% if edit_song and edit_song.origin==o %}selected{% endif %}>{{ o }}</option>
+    {% endfor %}
+</select>
+
+<select name="theme">
+    <option value="">Tema (opcionalno)</option>
+    {% for t in ["Božić","Halloween"] %}
+        <option {% if edit_song and edit_song.theme==t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+</select>
+
+</div>
+
+<label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+    Planirani mix
+</label>
+<select name="planned_mix">
+    <option value="">— bez mixa —</option>
+    {% for m in mixes %}
+        <option value="{{ m.name }}"
+        {% if edit_song and edit_song.planned_mix==m.name %}selected{% endif %}>
+            {{ m.name }}
+        </option>
+    {% endfor %}
+</select>
+
+<input name="planned_mix_new" placeholder="ili novi mix (npr. Fešta 2026)">
+<input type="number" name="mix_order" min="1"
+       placeholder="Broj pjesme u miksu (npr. 1)"
+       value="{{ edit_song.mix_order if edit_song else '' }}"
+       style="margin-top:8px;">
+
+
+<label
+    style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:16px;
+        font-weight:500;
+        font-size:16px;
+        color:#fff;
+        cursor:pointer;
+    "
+>
+<span>Instrumental</span>
+    <input
+        type="checkbox"
+        name="is_instrumental"
+        value="1"
+        style="
+            width:22px;
+            height:22px;
+            margin:0;
+            flex-shrink:0;
+            accent-color:#00ffe1;
+        "
+        {% if edit_song and edit_song.is_instrumental==1 %}checked{% endif %}
+    >
+    
+</label>
+
+ <label style="margin-bottom:12px; 
+            display:flex; 
+            align-items:center; 
+            gap:10px;font-weight:500; 
+            padding: 16px;color: #aaa; 
+            font-size: 16px;">   
+    Partiture (opcionalno)
+</label>
+<input name="score_pdf" placeholder="PDF partiture (opcionalno)"
+       value="{{ edit_song.score_pdf if edit_song else '' }}">
+
+ <label style="margin-bottom:12px; 
+            display:flex; 
+            align-items:center; 
+            gap:10px;font-weight:500; 
+            padding: 16px;color: #aaa; 
+            font-size: 16px;">   
+    Tekst
+</label>
+<textarea name="lyrics"
+          placeholder="Lyrics (opcionalno)">{{ edit_song.lyrics if edit_song else '' }}</textarea>
+
+<div style="text-align:center;margin-top:16px;">
+    <button type="submit"
+        style="
+            padding:10px 16px;
+            background:#14532d;
+            color:#000;
+            border-radius:12px;
+            border:0px solid #ddd;
+            font-weight:600;
+            font-size:16px;
+        ">
+    <span style="display:inline-flex;align-items:center;gap:8px;">
+        {% if edit_song %}
+            <span class="icon icon-save" style="color:#fff;"></span>
+            
+        {% else %}
+            <span class="icon icon-plus" style="color:#fff;"></span>
+            
+        {% endif %}
+    </span>
+</button>
+
+</div>
+
+</form>
+</div>
+
+<script>
+    function toggleAddSong() {
+        const form = document.getElementById("add-song-form");
+        const btn = document.getElementById("toggle-add-btn");
+        const emptyMsg = document.getElementById("empty-probe-msg");
+        const isOpen = form.style.display === "block";
+    
+        if (isOpen) {
+            form.style.display = "none";
+            if (emptyMsg) emptyMsg.style.display = "block";
+    
+            btn.innerHTML = `
+                <span style="display:inline-flex;align-items:center;gap:8px;">
+                    <span class="icon icon-plus" style="color:#fff;"></span>
+                </span>
+            `;
+        } else {
+            form.style.display = "block";
+            if (emptyMsg) emptyMsg.style.display = "none";
+    
+            btn.innerHTML = `
+                <span style="display:inline-flex;align-items:center;gap:8px;">
+                    <span class="icon icon-close" style="color:#fff;"></span>
+                </span>
+            `;
+    
+            // ⬇️ KLJUČNI DIO
+            const headerOffset = 190; // visina action bara + malo zraka
+            const elementPosition = form.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
+        }
+    }
+    </script>
+
+{% endblock %}

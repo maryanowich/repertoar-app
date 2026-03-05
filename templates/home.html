@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Repka{% endblock %}
+
+{% block content %}
+<div style="padding:24px">
+
+    <!-- LIBRARY ZONA -->
+    <div style="margin-bottom:32px;">
+        <div class="home-section"
+             style="color:#888; font-weight:700; letter-spacing:.08em; margin-bottom:12px;">
+            BIBLIOTEKA
+        </div>
+
+        <!-- REPERTOAR -->
+        <a href="/repertoar"
+           class="home-card"
+           style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:linear-gradient(135deg,#ffffff,#f3f6ff);
+            color:#000;
+            border-radius:16px;
+            padding:28px;
+            margin-bottom:16px;
+            text-decoration:none;
+            border:1px solid #dde3ff;
+        ">
+            <div>
+                <div class="home-title"
+                     style="font-size:28px; font-weight:800; display:flex; gap:12px; align-items:center;">
+                    <span class="icon icon-repertoar"></span>
+                    Repertoar
+                </div>
+                <div class="home-desc"
+                     style="margin-top:8px; font-size:16px; color:#444">
+                    Brzi pregled i pretraga pjesama
+                </div>
+            </div>
+
+            <div class="home-count"
+                 style="font-size:20px;font-weight:600;">
+                {{ song_count }} pjesama
+            </div>
+        </a>
+
+        <!-- MIXEVI -->
+        <a href="/mixes"
+           class="home-card"
+           style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:linear-gradient(135deg,#ffffff,#f0f9ff);
+            color:#000;
+            border-radius:16px;
+            padding:28px;
+            text-decoration:none;
+            border:1px solid #d6ecff;
+        ">
+            <div>
+                <div class="home-title"
+                     style="font-size:28px; font-weight:800; display:flex; gap:12px; align-items:center;">
+                    <span class="icon icon-miksevi"></span>
+                    Mixevi
+                </div>
+                <div class="home-desc"
+                     style="margin-top:8px; font-size:16px; color:#444">
+                    Gotovi flow-ovi za nastupe
+                </div>
+            </div>
+
+            <div class="home-count"
+                 style="font-size:20px;font-weight:600;">
+                {{ mix_count }} mikseva
+            </div>
+        </a>
+    </div>
+
+    <!-- LIVE ZONA -->
+    <div style="margin-bottom:32px;">
+        <div class="home-section"
+             style="color:#ffb000; font-weight:800; letter-spacing:.08em; margin-bottom:12px;">
+            LIVE
+        </div>
+
+        <!-- SET LISTE -->
+        <a href="/setlists"
+           class="home-card"
+           style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:linear-gradient(135deg,#fff2cc,#ffe29a);
+            color:#000;
+            border-radius:18px;
+            padding:32px;
+            text-decoration:none;
+            box-shadow:0 0 24px rgba(255,180,0,.35);
+        ">
+            <div>
+                <div class="home-title"
+                     style="font-size:30px; font-weight:900; display:flex; gap:12px; align-items:center;">
+                    <span class="icon icon-setliste"></span>
+                    Set liste
+                </div>
+                <div class="home-desc"
+                     style="margin-top:8px; font-size:16px; color:#5a4300">
+                    Glavni alat tijekom svirke
+                </div>
+            </div>
+
+            <div class="home-count"
+                 style="font-size:20px;font-weight:600;">
+                {{ setlist_count or 0 }} set lista
+            </div>
+        </a>
+    </div>
+
+    <!-- PRIPREMA -->
+    <div>
+        <div class="home-section"
+             style="color:#00c48c; font-weight:800; letter-spacing:.08em; margin-bottom:12px;">
+            PRIPREMA
+        </div>
+
+        <!-- PROBE -->
+        <a href="/probe"
+           class="home-card"
+           style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:linear-gradient(135deg,#eafff6,#c8f5e4);
+            color:#000;
+            border-radius:16px;
+            padding:28px;
+            text-decoration:none;
+            border:1px solid #b2ebd6;
+        ">
+            <div>
+                <div class="home-title"
+                     style="font-size:28px; font-weight:800; display:flex; gap:12px; align-items:center;">
+                    <span class="icon icon-probe"></span>
+                    Probe
+                </div>
+                <div class="home-desc"
+                     style="margin-top:8px; font-size:16px; color:#1f6b55">
+                    Priprema materijala za repertoar
+                </div>
+            </div>
+
+            <div class="home-count"
+                 style="font-size:20px;font-weight:600;">
+                {{ rehearsal_count }} probi
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- MOBILE FIX SAMO ZA HOME -->
+<style>
+@media (max-width: 480px) {
+
+    .home-card {
+        padding: 18px !important;
+        border-radius: 14px !important;
+    }
+
+    .home-title {
+        font-size: 20px !important;
+        font-weight: 800;
+    }
+
+    .home-desc {
+        font-size: 14px !important;
+        margin-top: 6px !important;
+    }
+
+    .home-count {
+        font-size: 14px !important;
+        font-weight: 600;
+    }
+
+    .home-section {
+        font-size: 13px !important;
+    }
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Uredi mix{% endblock %}
+
+{% block content %}
+
+<div style=margin:auto;padding:20px;>
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;   
+        top: 88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <!-- LEFT: TITLE -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-miksevi"></span>
+        {{ mix.name }}
+    </div>
+
+    <!-- RIGHT: ADD SONGS -->
+    <a href="/mix/{{ mix.id }}/add"
+       style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#111;
+        color:#fff;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:1px solid #333;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+
+</div>
+
+
+<!-- SONGS IN MIX -->
+<h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">
+    
+    Promijeni redosljed / ukloni 
+</h3>
+
+<div id="sortableMixSongs" class="list">
+
+{% for s in mix_songs %}
+<div class="song-row draggable-item"
+     data-id="{{ s.id }}"
+     style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        background: rgb(255, 255, 255);
+     ">
+
+    <!-- LEFT -->
+    <div style="flex:1;">
+        <div class="title" style="color:#000">{{ s.title }}</div>
+        <div class="meta" style="color:#000">
+            {{ s.artist }} • Tonalitet: <strong>{{ s.key }}</strong>
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;align-items:center;gap:10px;">
+
+        <!-- POSITION -->
+        <div style="
+            padding:6px 10px;
+            border-radius:10px;
+            background: rgba(0,0,0,0.25);
+            color:#fff;
+            font-weight:600;
+            text-align:center;
+        ">
+            # {{ s.mix_order }}
+        </div>
+
+        <!-- DELETE -->
+        <form method="post"
+              action="/mix/{{ mix.id }}/remove/{{ s.id }}"
+              onsubmit="return confirm('Ukloniti pjesmu iz miksa?');">
+              <button type="submit" class="action-btn delete">
+                <span class="icon icon-delete"></span>
+            </button>
+        </form>
+
+    </div>
+
+</div>
+{% endfor %}
+
+{% if mix_songs|length == 0 %}
+<div style="color:#777;text-align:center;padding:16px;">
+    Mix je prazan.
+</div>
+{% endif %}
+
+</div>
+
+
+<hr style="margin: 12px 0;border:0.5px solid #222;">
+
+<!-- EDIT MIX NAME -->
+<h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px; color: #aaa;font-size: 16px">
+    
+    Promijeni naziv
+</h3>
+<form method="post" action="/mix/{{ mix.id }}/edit">
+
+    <div style="display:flex; justify-content:center; margin-bottom:12px;">
+        <input name="name"
+               required
+               value="{{ mix.name }}"
+               placeholder="Naziv miksa"
+               style="
+                    justify-content:center; 
+                    display:flex;
+                    height:48px;
+                    border-radius:12px;
+                    background:#111;
+                    border:1px solid #333;
+                    color:#fff;
+                    font-size:16px;
+                    padding:10px 16px;
+               ">
+    </div>
+
+    <div style="display:flex;justify-content:center;">
+        <button type="submit"
+                style="
+                    padding:10px 16px;
+                    background:#fff;
+                    color:#000;
+                    border-radius:12px;
+                    border:1px solid #ddd;
+                    font-weight:600;
+                    display:flex;
+                    align-items:center;
+                    gap:8px;
+                ">
+            <span class="icon icon-save"></span>
+        </button>
+    </div>
+
+</form>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+new Sortable(document.getElementById('sortableMixSongs'), {
+    animation: 200,
+    delay: 300,
+    delayOnTouchOnly: true,
+    ghostClass: 'drag-ghost',
+    chosenClass: 'drag-chosen',
+
+    onEnd: function () {
+        let order = [];
+
+        document
+            .querySelectorAll('#sortableMixSongs .draggable-item')
+            .forEach(el => {
+                order.push(el.dataset.id);
+            });
+
+        fetch("/mix/{{ mix.id }}/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: order })
+        }).then(() => location.reload());
+    }
+});
+</script>
+
+<style>
+.drag-chosen {
+    background:#222 !important;
+    transform: scale(1.02);
+    box-shadow: 0 0 14px rgba(0,255,225,0.35);
+}
+
+.drag-ghost {
+    opacity:0.4;
+}
+</style>
+
+
+
+{% endblock %}

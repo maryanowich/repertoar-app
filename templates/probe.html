@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Probe{% endblock %}
+
+{% block content %}
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top:88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+    <!-- LEFT -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-probe"></span>
+    </div>
+
+    <!-- ADD -->
+    <a href="/probe/new"
+   class="action-btn add"
+   style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#14532d;
+        color:#fff;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+</div>
+
+<!-- LISTA PROBA -->
+<div class="list" style="padding-top:20px;">
+
+{% for r in rehearsals %}
+    <div class="song-row"
+         style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            width:100%;
+            box-sizing:border-box;
+         ">
+
+        <!-- LINK NA PROBU -->
+        <a class="song-main"
+           href="/probe/{{ r.id }}"
+           style="flex:1;text-decoration:none;color:inherit;">
+
+            <!-- NAZIV -->
+            <div class="title" style="display:flex;align-items:center;gap:8px;">
+                <span class="icon icon-probe"></span>
+                {{ r.name }}
+            </div>
+
+            <!-- META -->
+            <div class="meta">
+                {{ r.date[8:10] }}/{{ r.date[5:7] }}/{{ r.date[0:4] }}
+                • {{ r.song_count }} pjesama
+                {% if r.note %} • {{ r.note }}{% endif %}
+            </div>
+        </a>
+
+        <!-- ACTIONS -->
+        <div style="display:flex;gap:8px;align-items:center;">
+
+            <!-- EDIT -->
+            <a href="/probe/{{ r.id }}/edit"
+               class="action-btn edit"
+               onclick="event.stopPropagation();">
+                <span class="icon icon-edit"></span>
+            </a>
+
+            <!-- DELETE -->
+            <form method="post"
+                  action="/probe/{{ r.id }}/delete"
+                  onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni da želite obrisati ovu probu?');">
+                <button type="submit" class="action-btn delete">
+                    <span class="icon icon-delete"></span>
+                </button>
+            </form>
+
+        </div>
+    </div>
+{% endfor %}
+
+{% if rehearsals|length == 0 %}
+    <div style="padding:24px;text-align:center;color:#777;">
+        Nema planiranih proba.
+    </div>
+{% endif %}
+
+</div>
+
+{% endblock %}

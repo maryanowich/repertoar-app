@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Repka{% endblock %}</title>
+
+<style>
+
+/* ================= THEME VARIABLES ================= */
+
+body.theme-dark {
+    --bg-main: #000;
+    --text-main: #f5f5f5;
+    --nav-bg: #000;
+}
+
+body.theme-light {
+    --bg-main: #f5f5f5;
+    --text-main: #000;
+    --nav-bg: #fff;
+}
+
+@font-face {
+    font-family: "Neuropol";
+    src: url("/static/fonts/Neuropol.otf") format("opentype");
+}
+
+
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+
+
+/* =================================================
+   LIBRARY – RADNA ZONA (CRNO + BIJELE KARTICE)
+   ================================================= */
+
+body.mode-library {
+    background: #000;
+}
+
+body.mode-library .nav{
+    background:#000;
+    
+}
+body.mode-library .action-bar {
+    background: #000;
+}
+
+body.mode-library .content {
+    background: #000;
+}
+
+/* bijele kartice za pjesme / mixeve */
+body.mode-library .mode-scope .song-row {
+    background: #ffffff;
+    color: #000;
+}
+
+body.mode-library .mode-scope .meta {
+    color: #555;
+}
+
+/* =================================================
+   SETLIST – LIVE (ŽUTO)
+   ================================================= */
+
+   body.mode-setlist {
+    background: #000;
+}
+
+
+body.mode-setlist .nav {
+    background: #000;
+     
+}
+
+body.mode-setlist .action-bar {
+    background: #000;
+}
+
+body.mode-setlist .nav-title {
+    background: #000;
+    color: #facc15;
+}
+body.mode-setlist .content {
+    background: #000;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.mode-setlist .mode-scope .song-row {
+    background: #f3e6c8;
+    color: #2b230f;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.mode-setlist .mode-scope .meta {
+    color: #6b5a2c;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* =================================================
+   REHEARSAL – PRIPREMA (ZELENO)
+   ================================================= */
+
+   body.mode-rehearsal {
+    background: #000;
+}
+
+
+body.mode-rehearsal .nav{
+    background: #000;
+        
+}
+
+body.mode-rehearsal .action-bar {
+   background: #000;
+
+}
+
+body.mode-rehearsal .nav-title {
+    background: #000;
+    color: #6ee7b7;
+}
+
+body.mode-rehearsal .mode-scope .song-row {
+    background: #dff7ea;
+    color: #1f3a2d;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.mode-rehearsal .mode-scope .meta {
+    color: #3a6b52;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =================================================
+   NAV
+   ================================================= */
+
+.nav {
+    padding: 12px 16px;
+    background: var(--nav-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    min-height: 64px;
+}
+
+.nav a {
+    color: #aaa;
+    text-decoration: none;
+    font-size: 22px;
+    min-width: 44px;
+    text-align: center;
+}
+
+.nav-placeholder {
+    min-width: 44px;
+}
+
+.nav-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.logo {
+    font-family: "Neuropol", cursive;
+    font-size: 30px;
+    color: #ffffff;
+}
+
+.nav-title {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* =================================================
+   ACTION BAR
+   ================================================= */
+
+.action-bar {
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    padding: 14px 16px;
+}
+
+/* =================================================
+   CONTENT & LIST
+   ================================================= */
+
+.content {
+    padding-bottom: 40px;
+    min-height: calc(100vh - 64px);
+}   
+
+.list {
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.song-row {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.song-main {
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.meta {
+    font-size: 14px;
+}
+/* =================================================
+   GLOBAL FORM UI (EDIT / ADD / FORMS)
+   ================================================= */
+
+   form input,
+form select,
+form textarea {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+
+    font-size: 17px;
+    font-weight: 500;
+
+    border-radius: 14px;
+    border: 1px solid #333;
+
+    background: #111;
+    color: #fff;
+
+    box-sizing: border-box;
+    margin-bottom: 12px;
+
+    outline: none;
+}
+
+/* textarea specific */
+form textarea {
+    padding: 14px 16px;
+    min-height: 220px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* focus state */
+form input:focus,
+form select:focus,
+form textarea:focus {
+    border-color: #00ffe1;
+    box-shadow: 0 0 0 2px rgba(0, 255, 225, 0.25);
+}
+
+/* placeholder */
+form input::placeholder,
+form textarea::placeholder {
+    color: #777;
+}
+
+/* select arrow fix (optional, clean look) */
+form select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #aaa 50%),
+        linear-gradient(135deg, #aaa 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) 22px,
+        calc(100% - 12px) 22px;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+}
+/* ================= CHECKBOX / RADIO FIX ================= */
+
+form input[type="checkbox"],
+form input[type="radio"] {
+    width: 22px;
+    height: 22px;
+    min-height: auto;
+    padding: 0;
+    margin: 0;
+
+    accent-color: #00ffe1;
+    cursor: pointer;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,0.08);
+    color: currentColor;
+
+    cursor: pointer;
+}
+/* ================= ACTION BUTTONS – MODE FIXES ================= */
+
+/* SETLIST (žuta pozadina) 
+body.mode-setlist .action-btn {
+    background: rgba(0, 0, 0, 0.18);
+}
+
+body.mode-setlist .action-btn.edit {
+    color: #92400e; /* tamno jantarna 
+}
+
+body.mode-setlist .action-btn.delete {
+    color: #7f1d1d; /* tamno crvena 
+}
+
+body.mode-setlist .action-btn.check {
+    color: #14532d; /* tamno zelena 
+}*/
+/* manji action button za setlist iteme *
+.action-btn.compact {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+}*/
+
+.action-btn.edit {
+    color: #159bfa; /* žuto */
+}
+
+.action-btn.delete {
+    color: #ef4444; /* crveno */
+}
+
+.action-btn.check {
+    color: #22c55e; /* zeleno */
+}
+
+.action-btn:hover {
+    background: rgba(0,0,0,0.15);
+}
+
+/* specifični action za ADD */
+.action-btn.add {
+    background: rgba(0,0,0,0.18);
+    color: #ffffff;
+}
+/* =================================================
+   TOOLBAR (STANDARD)
+   ================================================= */
+
+.toolbar {
+    position: sticky;
+    top: 64px;          /* ispod .nav */
+    z-index: 10;
+    padding: 14px 16px;
+    border-bottom: 1px solid #222;
+}
+
+/* ================= ICON SYSTEM ================= */
+.icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    background-color: currentColor;
+
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+}
+
+/* konkretne ikone */
+.icon-repertoar {
+    mask-image: url("/static/icons/repertoar.svg");
+    -webkit-mask-image: url("/static/icons/repertoar.svg");
+}
+
+.icon-miksevi {
+    mask-image: url("/static/icons/miksevi.svg");
+    -webkit-mask-image: url("/static/icons/miksevi.svg");
+}
+
+.icon-setliste {
+    mask-image: url("/static/icons/set_liste.svg");
+    -webkit-mask-image: url("/static/icons/set_liste.svg");
+}
+
+.icon-probe {
+    mask-image: url("/static/icons/probe.svg");
+    -webkit-mask-image: url("/static/icons/probe.svg");
+}
+
+/* REPERTOAR */
+.icon-note {
+    mask-image: url("/static/icons/repertoar.svg");
+    -webkit-mask-image: url("/static/icons/repertoar.svg");
+}
+/* MIXEVI */
+.icon-mix {
+    mask-image: url("/static/icons/miksevi.svg");
+    -webkit-mask-image: url("/static/icons/miksevi.svg");
+}
+/* ================= ACTION ICONS ================= */
+
+.icon-edit {
+    mask-image: url("/static/icons/edit.svg");
+    -webkit-mask-image: url("/static/icons/edit.svg");
+}
+
+.icon-delete {
+    mask-image: url("/static/icons/delete.svg");
+    -webkit-mask-image: url("/static/icons/delete.svg");
+}
+
+.icon-check {
+    mask-image: url("/static/icons/check.svg");
+    -webkit-mask-image: url("/static/icons/check.svg");
+}
+
+/* =================  ICONS ================= */
+
+.icon-plus {
+    mask-image: url("/static/icons/plus.svg");
+    -webkit-mask-image: url("/static/icons/plus.svg");
+}
+.icon-save {
+    mask-image: url("/static/icons/save.svg");
+    -webkit-mask-image: url("/static/icons/save.svg");
+}
+.icon-close {
+    mask-image: url("/static/icons/close.svg");
+    -webkit-mask-image: url("/static/icons/close.svg");
+}
+.icon-filter {
+    mask-image: url("/static/icons/filter.svg");
+    -webkit-mask-image: url("/static/icons/filter.svg");
+}
+.icon-create {
+    mask-image: url("/static/icons/create.svg");
+    -webkit-mask-image: url("/static/icons/create.svg");
+}
+.icon-home {
+    mask-image: url("/static/icons/home.svg");
+    -webkit-mask-image: url("/static/icons/home.svg");   
+}
+
+/* ================= READ MODE – GLOBAL ================= */
+
+/* normalni dark mode ostaje kakav jest */
+
+/* READ MODE */
+body.read-mode {
+    background: #f6f6f6;
+    color: #111;
+}
+
+/* HEADER / NAV */
+body.read-mode .nav {
+    background: #f6f6f6;
+    color: #111;
+    border-bottom: 0px solid #ddd;
+}
+
+/* CONTENT */
+body.read-mode .content {
+    background: #f6f6f6;
+}
+
+/* LYRICS */
+body.read-mode .lyrics {
+    color: #111;
+}
+
+/* META (siva ostaje siva) */
+body.read-mode .lyrics,
+body.read-mode .nav-title,
+body.read-mode .meta {
+    color: #222;
+}
+
+/* READ BUTTON */
+body.read-mode #readModeToggle {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+/* ACTIVE STATE */
+body.read-mode #readModeToggle.active {
+    background: #111;
+    color: #fff;
+}
+
+/* ================= SVG READ TOGGLE ================= */
+
+.toggle-track {
+    fill: #444;
+    transition: fill 0.25s ease;
+}
+
+.toggle-knob {
+    fill: #fff;
+    transition: transform 0.25s ease, fill 0.25s ease;
+}
+
+/* ACTIVE (READ MODE ON) */
+body.read-mode .toggle-track {
+    fill: #111;
+}
+
+body.read-mode .toggle-knob {
+    transform: translateX(20px);
+    fill: #fff;
+}
+
+/* ===== MODE ICONS ===== */
+
+.mode-icon {
+    color: #888;
+    transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+/* READ MODE ON = LIGHT ACTIVE */
+body.read-mode .mode-icon.light {
+    color: #111;
+}
+
+body.read-mode .mode-icon.dark {
+    opacity: 0.4;
+}
+
+/* READ MODE OFF = DARK ACTIVE */
+body:not(.read-mode) .mode-icon.dark {
+    color: #fff;
+}
+
+body:not(.read-mode) .mode-icon.light {
+    opacity: 0.4;
+}
+
+/* MOBILNI FOOTER */
+.mobile-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    height: 64px;
+    background: #000;
+    border-top: 1px solid #222;
+    z-index: 100;
+}
+
+.mobile-footer .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 11px;
+    color: #aaa;
+    text-decoration: none;
+    gap: 4px;
+}
+
+.mobile-footer .nav-item .icon {
+    font-size: 20px;
+}
+
+.mobile-footer .nav-item.active {
+    color: #fff;
+}
+
+/* ⛔ desktop: sakrij footer */
+@media (min-width: 768px) {
+    .mobile-footer {
+        display: none;
+    }
+}
+@media (max-width: 767px) {
+    body {
+        padding-bottom: 64px;
+    }
+}
+/* === MOBILE FOOTER INTERACTION === */
+
+/* === MOBILE FOOTER BASE === */
+.mobile-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    height: 72px;
+    background: rgba(0,0,0,0.92);
+    border-top: 1px solid #222;
+    z-index: 100;
+}
+
+/* === NAV ITEM === */
+.mobile-footer .nav-item {
+    flex: 1;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    color: #aaa;
+    text-decoration: none;
+
+    transition:
+        transform 0.12s ease,
+        background-color 0.12s ease,
+        box-shadow 0.12s ease;
+
+    -webkit-tap-highlight-color: transparent; /* 🔑 iOS */
+}
+
+/* === TAP FEEDBACK (RADIT ĆE) === */
+.mobile-footer .nav-item:active {
+    background: rgba(255,255,255,0.15);
+    transform: scale(0.92);
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.25);
+}
+
+/* === ICON GLOW === */
+.mobile-footer .nav-item:active .icon {
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+}
+
+/* TEXT */
+.mobile-footer .nav-item span:last-child {
+    font-size: 12px;
+    font-weight: 600;
+}
+/* === ACTIVE NAV ITEM === */
+.mobile-footer .nav-item.active {
+    color: #fff;
+}
+
+.mobile-footer .nav-item.active .icon {
+    filter: drop-shadow(0 0 10px rgba(140, 0, 255, 0.9));
+}
+
+.mobile-footer .nav-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+}
+/* ================= MOBILE TUNING ================= */
+@media (max-width: 480px) {
+
+    body {
+        font-size: 14px;
+    }
+
+    .nav-title {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .title {
+        font-size: 16px;
+    }
+
+    .meta {
+        font-size: 13px;
+    }
+
+    form input,
+    form textarea,
+    form select {
+        font-size: 15px;
+        min-height: 44px;
+    }
+
+    .action-bar {
+        padding: 10px 12px;
+    }
+
+    .song-row {
+        padding: 10px;
+    }
+}
+.icon-settings {
+    mask-image: url("/static/icons/settings.svg");
+    -webkit-mask-image: url("/static/icons/settings.svg");
+}
+
+.icon-theme {
+    mask-image: url("/static/icons/theme.svg");
+    -webkit-mask-image: url("/static/icons/theme.svg");
+}
+</style>
+</head>
+
+<body class="mode-{{ nav.mode if nav and nav.mode else 'library' }} theme-dark">
+
+<div class="nav">
+    {% if nav and nav.show_back %}
+        <a href="{{ nav.back_url }}">←</a>
+    {% else %}
+        <div class="nav-placeholder"></div>
+    {% endif %}
+
+    <div class="nav-center">
+        {% if nav and nav.title %}
+            <div class="nav-title">{{ nav.title }}</div>
+        {% else %}
+            <div class="logo">Repka</div>
+        {% endif %}
+    </div>
+
+    <div class="nav-placeholder" style="display:flex; justify-content:flex-end;">
+        {% if nav and nav.show_settings %}
+            <a href="/settings"
+               style="
+                    width:36px;
+                    height:36px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    color:#fff;
+               ">
+                <span class="icon icon-settings"></span>
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% block floating_controls %}{% endblock %}
+
+<div class="content mode-scope">
+    {% block content %}{% endblock %}
+</div>
+
+{% if nav and nav.show_back %}
+<footer class="mobile-footer">
+    <a href="/" class="nav-item">
+        <span class="icon icon-home"></span>
+        <span>Home</span>
+    </a>
+
+    <a href="/repertoar" class="nav-item" data-route="/repertoar">
+        <span class="icon icon-repertoar"></span>
+        <span>Repertoar</span>
+    </a>
+
+    <a href="/mixes" class="nav-item" data-route="/mixes">
+        <span class="icon icon-mix"></span>
+        <span>Mixevi</span>
+    </a>
+
+    <a href="/setlists" class="nav-item" data-route="/setlists">
+        <span class="icon icon-setliste"></span>
+        <span>Setliste</span>
+    </a>
+
+    <a href="/probe" class="nav-item" data-route="/probe">
+        <span class="icon icon-probe"></span>
+        <span>Probe</span>
+    </a>
+</footer>
+{% endif %}
+<script>
+    document.addEventListener("touchstart", function(){}, true);
+    </script>
+
+<script>
+    (function () {
+        const path = window.location.pathname;
+        document.querySelectorAll(".mobile-footer .nav-item").forEach(item => {
+            if (path.startsWith(item.dataset.route)) {
+                item.classList.add("active");
+            }
+        });
+    })();
+    </script>
+    
+<script>
+    document.querySelectorAll(".mobile-footer .nav-item").forEach(item => {
+        item.addEventListener("click", () => {
+            if (navigator.vibrate) {
+                navigator.vibrate(15);
+            }
+        });
+    });
+    </script>
+</body>
+</html>

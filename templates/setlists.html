@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Set liste{% endblock %}
+
+{% block content %}
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top:88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+    <!-- LEFT -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-setliste"></span>
+    </div>
+
+    <!-- ADD -->
+    <a href="/setlist/new"
+   class="action-btn add"
+   style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#6b5a2c;
+        color:#fff;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+</div>
+
+<!-- LIST -->
+<div class="list">
+
+{% for s in setlists %}
+<div class="song-row"
+     style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:16px;
+        width:100%;
+        box-sizing:border-box;
+     ">
+
+    <!-- LEFT -->
+    <a class="song-main"
+       href="/setlist/{{ s.id }}"
+       style="flex:1;text-decoration:none;color:inherit;">
+
+        <div class="title" style="display:flex;align-items:center;gap:8px;">
+            <span class="icon icon-setliste"></span>
+            {{ s.name }}
+        </div>
+
+        <div class="meta">
+            {{ s.date[8:10] }}/{{ s.date[5:7] }}/{{ s.date[0:4] }}
+            • {{ s.item_count }} stavki
+            {% if s.note %} • {{ s.note }}{% endif %}
+        </div>
+    </a>
+
+    <!-- RIGHT -->
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="/setlist/{{ s.id }}/edit"
+           class="action-btn edit"
+           onclick="event.stopPropagation();">
+            <span class="icon icon-edit"></span>
+        </a>
+
+        <form method="post"
+              action="/setlist/{{ s.id }}/delete"
+              onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni?');">
+            <button type="submit" class="action-btn delete">
+                <span class="icon icon-delete"></span>
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endfor %}
+
+{% if setlists|length == 0 %}
+<div style="padding:24px;text-align:center;color:#777;">
+    Nema set lista.
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}{{ setlist.name }}{% endblock %}
+
+{% block content %}
+
+<!-- ACTION BAR (SETLIST DETAIL) -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top: 88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <div>
+        <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-setliste"></span>
+        {{ setlist.name }}
+    </div>
+    
+
+        <div style="color:#aaa;margin-top:4px;">
+            {{ setlist.date[8:10] }}/{{ setlist.date[5:7] }}/{{ setlist.date[0:4] }}
+            {% if setlist.note %} • {{ setlist.note }}{% endif %}
+        </div>
+    </div>
+
+    <a href="/setlist/{{ setlist.id }}/add"
+   style="
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        background:#6b5a2c;;
+        color:#fff;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:0;
+        outline:none;
+        box-shadow:none;
+        appearance:none;
+        -webkit-appearance:none;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+</div>
+
+<!-- LISTA STAVKI -->
+<div id="sortableList" class="list" style="padding-top:20px;">
+
+{% for item in items %}
+
+    <div class="song-row draggable-item"
+         data-id="{{ item.id }}"
+         style="display:flex;justify-content:space-between;align-items:center;">
+
+        <!-- LIJEVA STRANA (TAP = OPEN, LONG PRESS = DRAG) -->
+        {% if item.item_type == 'song' %}
+        <div
+            class="clickable"
+            data-href="/song/{{ item.item_id }}?from=setlist&set={{ setlist.id }}"
+            style="flex:1; position:relative;"
+        >
+        <div class="title" style="display:flex;align-items:center;gap:8px;">
+            <span class="icon icon-repertoar"></span>
+            {{ item.song_title }}
+        </div>
+        
+            <div class="meta">
+                {{ item.song_artist }}
+                • Tonalitet: <strong>{{ item.key or '-' }}</strong>
+            </div>
+        </div>
+
+        {% elif item.item_type == 'mix' %}
+        <div
+            class="clickable"
+            data-href="/mix/{{ item.item_id }}?from=setlist&set={{ setlist.id }}"
+            style="flex:1; position:relative;"
+        >
+        <div class="title" style="display:flex;align-items:center;gap:8px;">
+            <span class="icon icon-mix"></span>
+            {{ item.mix_name }}
+        </div>
+        
+            <div class="meta">
+                Tonalitet: <strong>{{ item.mix_key or '-' }}
+                {% if item.song_titles %}</strong>
+                    <br>
+                    {{ item.song_titles }}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- DESNA STRANA -->
+        <div style="display:flex;align-items:center;gap:10px;">
+
+            <!-- POZICIJA -->
+            <div style="
+                padding:6px 10px;
+                border-radius:10px;
+                background: rgba(0, 0, 0, 0.18);
+                color:#0a0a0a;
+                font-weight:600;
+            ">
+                # {{ item.position }}
+            </div>
+
+            <!-- DELETE -->
+            <form method="post"
+                  action="/setlist/{{ setlist.id }}/remove/{{ item.id }}"
+                  onsubmit="return confirm('Ukloniti ovu stavku iz set liste?');">
+
+                  <button type="submit" class="action-btn delete">
+                    <span class="icon icon-delete"></span>
+                </button>
+                
+
+            </form>
+
+        </div>
+
+    </div>
+
+{% endfor %}
+
+{% if items|length == 0 %}
+    <div style="padding:24px;text-align:center;color:#777;">
+        Ova set lista je prazna.
+    </div>
+{% endif %}
+
+</div>
+
+<!-- LONG PRESS SORTING (NE DIRAJ DIZAJN) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+new Sortable(document.getElementById('sortableList'), {
+    animation: 200,
+    delay: 300,
+    delayOnTouchOnly: true,
+    ghostClass: 'drag-ghost',
+    chosenClass: 'drag-chosen',
+
+    onEnd: function () {
+
+        let order = [];
+
+        document.querySelectorAll('.draggable-item').forEach(el => {
+            order.push(el.dataset.id);
+        });
+
+        fetch("/setlist/{{ setlist.id }}/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: order })
+        }).then(() => location.reload());
+    }
+});
+</script>
+
+<!-- TAP HANDLER (BEZ <a>) -->
+<script>
+document.querySelectorAll('.clickable').forEach(el => {
+    el.addEventListener('click', function () {
+        const url = this.dataset.href;
+        if (url) window.location.href = url;
+    });
+});
+</script>
+
+<style>
+.drag-chosen {
+    background:#222 !important;
+    transform: scale(1.02);
+    box-shadow: 0 0 14px rgba(0,255,225,0.4);
+}
+
+.drag-ghost {
+    opacity:0.4;
+}
+</style>
+
+{% endblock %}

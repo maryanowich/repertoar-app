@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Uredi probu{% endblock %}
+
+{% block content %}
+
+<div style=margin:auto;padding:20px;>
+
+<!-- ACTION BAR -->
+<div class="action-bar"
+     style="
+        padding:16px;
+        top: 88px;
+        border-bottom:1px solid #222;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+">
+
+    <!-- LEFT: TITLE -->
+    <div style="
+        font-size:22px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    ">
+        <span class="icon icon-probe"></span>
+        {{ rehearsal.name  }}
+    </div>
+        <div class="meta">
+               
+        </div>
+ </div>
+ 
+ <h3 style="
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    padding:16px;
+    color:#777;
+    font-size:16px;
+">
+    Promijeni podatke
+</h3>
+    <!-- FORMA -->
+    <form method="post">
+
+        <!-- NAZIV -->
+        <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">
+            Naziv probe *
+        </h3>
+        <input
+            type="text"
+            name="name"
+            value="{{ rehearsal.name }}"
+            required
+            style="
+                width:100%;
+                height:48px;
+                display: grid;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:16px;
+            "
+        >
+
+        <!-- DATUM -->
+        <label style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">
+            Datum probe *
+        </label>
+        <input
+            type="date"
+            name="date"
+            value="{{ rehearsal.date }}"
+            required
+            style="
+                width:100%;
+                height:48px;
+                display: grid;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:16px;
+            "
+        >
+
+        <!-- NAPOMENA -->
+        <label style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">
+            Napomena 
+        </label>
+        <input
+            type="text"
+            name="note"
+            value="{{ rehearsal.note }}"
+            style="
+                width:100%;
+                height:48px;
+                display: grid;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:20px;
+            "
+        >
+
+        <!-- GUMB -->
+        <div style="text-align:center;">
+            <button
+    type="submit"
+    style="
+        padding:10px 14px;
+        min-width:44px;
+        min-height:44px;
+        background:#14532d;
+        border:1px solid #333;
+        color:#fff;
+        border-radius:12px;
+        font-weight:600;
+        font-size:16px;
+        cursor:pointer;
+
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+    "
+>
+    <span style="
+        width:18px;
+        height:18px;
+        display:inline-block;
+        background-color:currentColor;
+        mask-image:url('/static/icons/save.svg');
+        -webkit-mask-image:url('/static/icons/save.svg');
+        mask-repeat:no-repeat;
+        -webkit-mask-repeat:no-repeat;
+        mask-position:center;
+        -webkit-mask-position:center;
+        mask-size:contain;
+        -webkit-mask-size:contain;
+    "></span>
+    
+</button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
