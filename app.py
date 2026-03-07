@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, abort, redirect, session
-import sqlite3
+from flask import Flask, render_template, request, abort, redirect, session, jsonify
+import psycopg2
+import psycopg2.extras
 import os
 
 app = Flask(__name__)
@@ -7,11 +8,170 @@ app = Flask(__name__)
 # simple session setup for role control
 app.secret_key = "repertoar-dev-key"
 
-# default role for all visitors
+# default session values for all visitors
 @app.before_request
-def set_default_role():
+def set_default_session_values():
     if "role" not in session:
         session["role"] = "viewer"
+
+    if "language" not in session:
+        session["language"] = "hr"
+
+    if "market" not in session:
+        session["market"] = "hr"
+
+    if "auto_lock" not in session:
+        session["auto_lock"] = "off"
+
+# ---------- SESSION HELPERS ----------
+
+def get_language():
+    return session.get("language", "hr")
+
+def get_market():
+    return session.get("market", "hr")
+
+# ---------- MARKET FILTER CONFIG ----------
+MARKET_FILTERS = {
+    "hr": {
+        "origin": ["Domaće", "Strano"],
+        "vocal": ["Muško", "Žensko", "Duet"],
+        "tempo": ["Spora", "Srednja", "Brza"],
+        "special": ["Instrumental"],
+        "genres_mode": "local"
+    },
+    "international": {
+        "origin": ["Domestic", "International"],
+        "vocal": ["Male", "Female", "Duet"],
+        "tempo": ["Slow", "Medium", "Fast"],
+        "special": ["Instrumental"],
+        "genres_mode": "genre"
+    }
+}
+
+def get_market_filters():
+    market = get_market()
+    return MARKET_FILTERS.get(market, MARKET_FILTERS["hr"])
+
+# ---------- GLOBAL TEMPLATE VARIABLES ----------
+@app.context_processor
+def inject_globals():
+    return {
+        "lang": get_language(),
+        "market": get_market(),
+        "market_filters": get_market_filters(),
+        "auto_lock": session.get("auto_lock", "off")
+    }
+
+# ---------- TRANSLATIONS ----------
+TRANSLATIONS = {
+
+    # MAIN NAV
+    "home": {
+        "hr": "Početna",
+        "en": "Home",
+        "de": "Start"
+    },
+    "repertoar": {
+        "hr": "Repertoar",
+        "en": "Repertoire",
+        "de": "Repertoire"
+    },
+    "mixes": {
+        "hr": "Miksevi",
+        "en": "Mixes",
+        "de": "Mixes"
+    },
+    "setlists": {
+        "hr": "Set liste",
+        "en": "Setlists",
+        "de": "Setlists"
+    },
+    "rehearsals": {
+        "hr": "Probe",
+        "en": "Rehearsals",
+        "de": "Proben"
+    },
+    "settings": {
+        "hr": "Postavke",
+        "en": "Settings",
+        "de": "Einstellungen"
+    },
+
+    # COMMON ACTIONS
+    "add": {
+        "hr": "Dodaj",
+        "en": "Add",
+        "de": "Hinzufügen"
+    },
+    "edit": {
+        "hr": "Uredi",
+        "en": "Edit",
+        "de": "Bearbeiten"
+    },
+    "delete": {
+        "hr": "Obriši",
+        "en": "Delete",
+        "de": "Löschen"
+    },
+    "save": {
+        "hr": "Spremi",
+        "en": "Save",
+        "de": "Speichern"
+    },
+    "cancel": {
+        "hr": "Odustani",
+        "en": "Cancel",
+        "de": "Abbrechen"
+    },
+
+    # FILTER / SEARCH
+    "filter": {
+        "hr": "Filter",
+        "en": "Filter",
+        "de": "Filter"
+    },
+    "search": {
+        "hr": "Pretraži",
+        "en": "Search",
+        "de": "Suche"
+    },
+
+    # SETTINGS SECTIONS
+    "theme": {
+        "hr": "Tema",
+        "en": "Theme",
+        "de": "Design"
+    },
+    "language": {
+        "hr": "Jezik",
+        "en": "Language",
+        "de": "Sprache"
+    },
+    "market": {
+        "hr": "Tržište",
+        "en": "Market",
+        "de": "Markt"
+    },
+
+    # OTHER
+    "logout": {
+        "hr": "Odjava",
+        "en": "Logout",
+        "de": "Abmelden"
+    }
+}
+
+def t(key):
+    lang = get_language()
+    if key in TRANSLATIONS and lang in TRANSLATIONS[key]:
+        return TRANSLATIONS[key][lang]
+    return key
+
+# expose translation helper to templates
+@app.context_processor
+def inject_translator():
+    return {"t": t}
 
 # helper for admin-only routes
 def require_admin():
@@ -30,6 +190,34 @@ def viewer_mode():
     session["role"] = "viewer"
     return "Viewer mode ON"
 
+# ---------- SETTINGS: LANGUAGE ----------
+@app.route("/settings/language/<lang>", methods=["POST"])
+def set_language(lang):
+    if lang not in ["hr", "en", "de"]:
+        abort(400)
+
+    session["language"] = lang
+    return ("", 204)
+
+
+# ---------- SETTINGS: MARKET ----------
+@app.route("/settings/market/<market>", methods=["POST"])
+def set_market(market):
+    if market not in ["hr", "international"]:
+        abort(400)
+
+    session["market"] = market
+    return ("", 204)
+
+# ---------- SETTINGS: AUTO LOCK ----------
+@app.route("/settings/autolock/<mode>", methods=["POST"])
+def set_auto_lock(mode):
+    if mode not in ["off", "5", "15"]:
+        abort(400)
+
+    session["auto_lock"] = mode
+    return ("", 204)
+
 def nav_ctx(title=None, back_url=None, mode="library", show_back=True, show_settings=True):
     return {
         "title": title,
@@ -39,12 +227,40 @@ def nav_ctx(title=None, back_url=None, mode="library", show_back=True, show_sett
         "show_settings": show_settings
     }
 
+
 # ---------- DB ----------
+class DB:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def execute(self, query, params=None):
+        # convert SQLite ? placeholders to PostgreSQL %s
+        query = query.replace("?", "%s")
+
+        cur = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(query, params or [])
+        return cur
+
+    def commit(self):
+        self.conn.commit()
+
+
 def get_db():
-    db_path = os.environ.get("DATABASE_PATH", "repertoire.db")
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
+    # Support Render / production DATABASE_URL
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(
+            dbname=os.environ.get("PGDATABASE", "repertoar"),
+            user=os.environ.get("PGUSER", "markomarjanovic"),
+            password=os.environ.get("PGPASSWORD", ""),
+            host=os.environ.get("PGHOST", "localhost"),
+            port=os.environ.get("PGPORT", "5432"),
+        )
+
+    return DB(conn)
 
 
 # ---------- HOME ----------
@@ -53,20 +269,20 @@ def home():
     db = get_db()
 
     song_count = db.execute(
-        "SELECT COUNT(*) FROM songs WHERE status='repertoar'"
-    ).fetchone()[0]
+        "SELECT COUNT(*) AS count FROM songs WHERE status='repertoar'"
+    ).fetchone()["count"]
 
     mix_count = db.execute(
-        "SELECT COUNT(*) FROM mixes"
-    ).fetchone()[0]
+        "SELECT COUNT(*) AS count FROM mixes"
+    ).fetchone()["count"]
 
     rehearsal_count = db.execute(
-        "SELECT COUNT(*) FROM rehearsals WHERE status='planned'"
-    ).fetchone()[0]
+        "SELECT COUNT(*) AS count FROM rehearsals WHERE status='planned'"
+    ).fetchone()["count"]
 
     setlist_count = db.execute(
-        "SELECT COUNT(*) FROM setlists"
-    ).fetchone()[0]
+        "SELECT COUNT(*) AS count FROM setlists"
+    ).fetchone()["count"]
 
     return render_template(
         "home.html",
@@ -81,6 +297,71 @@ def home():
             show_back=False
         )   
     )
+
+# ---------- SONG STATS (SETTINGS PANEL) ----------
+@app.route("/api/song_stats")
+def api_song_stats():
+    db = get_db()
+
+    stats = db.execute(
+        "SELECT * FROM v_home_stats"
+    ).fetchone()
+
+    mix_count = db.execute(
+        "SELECT COUNT(*) AS count FROM mixes"
+    ).fetchone()["count"]
+
+    setlist_count = db.execute(
+        "SELECT COUNT(*) AS count FROM setlists"
+    ).fetchone()["count"]
+
+    rehearsal_count = db.execute(
+        "SELECT COUNT(*) AS count FROM rehearsals"
+    ).fetchone()["count"]
+
+    tempo_stats = db.execute(
+        """
+        SELECT
+            SUM(CASE WHEN tempo = 'Spora' THEN 1 ELSE 0 END) AS tempo_spora,
+            SUM(CASE WHEN tempo = 'Srednja' THEN 1 ELSE 0 END) AS tempo_srednja,
+            SUM(CASE WHEN tempo = 'Brza' THEN 1 ELSE 0 END) AS tempo_brza
+        FROM songs
+        WHERE status='repertoar'
+        """
+    ).fetchone()
+
+    # genre statistics (from view)
+    genres = db.execute(
+        "SELECT genre, genre_count AS count FROM v_brojzanr ORDER BY genre_count DESC"
+    ).fetchall()
+
+    # region statistics
+    regions = db.execute(
+        """
+        SELECT region, COUNT(*) AS count
+        FROM songs
+        WHERE status='repertoar' AND region IS NOT NULL AND region != ''
+        GROUP BY region
+        ORDER BY count DESC
+        """
+    ).fetchall()
+
+    return jsonify({
+        "total_songs": stats["total_songs"],
+        "tempo_spora": tempo_stats["tempo_spora"],
+        "tempo_srednja": tempo_stats["tempo_srednja"],
+        "tempo_brza": tempo_stats["tempo_brza"],
+        "total_domace": stats["total_domace"],
+        "total_strano": stats["total_strano"],
+        "total_musko": stats["total_musko"],
+        "total_zensko": stats["total_zensko"],
+        "total_instrumental": stats["total_instrumental"],
+        "total_mixes": mix_count,
+        "total_setlists": setlist_count,
+        "total_rehearsals": rehearsal_count,
+        "genres": genres,
+        "regions": regions
+    })
 
 # ---------- REPERTOAR ----------
 @app.route("/repertoar")
@@ -129,7 +410,7 @@ def repertoar():
         query += " AND (songs.title LIKE ? OR songs.artist LIKE ?)"
         params += [f"%{filters['q']}%"] * 2
 
-    query += " ORDER BY LOWER(songs.title) COLLATE NOCASE"
+    query += " ORDER BY LOWER(songs.title)"
 
     songs = db.execute(query, params).fetchall()
 
@@ -244,10 +525,10 @@ def song_add():
 
             if not mix:
                 cur = db.execute(
-                    "INSERT INTO mixes (name) VALUES (?)",
+                    "INSERT INTO mixes (name) VALUES (?) RETURNING id",
                     (final_planned_mix,)
                 )
-                mix_id = cur.lastrowid
+                mix_id = cur.fetchone()["id"]
             else:
                 mix_id = mix["id"]
 
@@ -325,10 +606,10 @@ def edit_song_repertoar(song_id):
 
             if not mix:
                 cur = db.execute(
-                    "INSERT INTO mixes (name) VALUES (?)",
+                    "INSERT INTO mixes (name) VALUES (?) RETURNING id",
                     (final_planned_mix,)
                 )
-                mix_id = cur.lastrowid
+                mix_id = cur.fetchone()["id"]
             else:
                 mix_id = mix["id"]
 
@@ -498,14 +779,14 @@ def mixes():
             ) AS song_count,
 
             (
-                SELECT GROUP_CONCAT(title, ', ')
+                SELECT STRING_AGG(title, ', ')
                 FROM (
                     SELECT s2.title
                     FROM songs s2
                     WHERE s2.mix_id = m.id
                       AND s2.status = 'repertoar'
                     ORDER BY s2.mix_order ASC
-                )
+                ) AS agg
             ) AS song_titles,
 
             (
@@ -519,7 +800,7 @@ def mixes():
 
             CASE
                 WHEN m.created_at IS NOT NULL
-                 AND (strftime('%s','now') - strftime('%s', m.created_at)) < 86400
+                 AND EXTRACT(EPOCH FROM (NOW() - CAST(m.created_at AS timestamptz))) < 86400
                 THEN 1
                 ELSE 0
             END AS is_new
@@ -591,8 +872,7 @@ def mixes():
             title="Mixevi",
             back_url="/",
             mode="library",
-            show_back=True,
-            show_settings=False
+            show_back=True
         )
     )
 # ---------- NEW MIX ----------
@@ -609,13 +889,14 @@ def mix_new():
         cur = db.execute(
             """
             INSERT INTO mixes (name, created_at)
-            VALUES (?, datetime('now'))
+            VALUES (?, NOW())
+            RETURNING id
             """,
             (name,)
         )
         db.commit()
 
-        mix_id = cur.lastrowid
+        mix_id = cur.fetchone()["id"]
 
         # odmah vodi u edit tog mixa
         return redirect(f"/mix/{mix_id}/edit")
@@ -972,10 +1253,11 @@ def probe_new():
         cur = db.execute("""
             INSERT INTO rehearsals (name, date, note, status)
             VALUES (?, ?, ?, 'planned')
+            RETURNING id
         """, (name, date, note))
         db.commit()
 
-        return redirect(f"/probe/{cur.lastrowid}")
+        return redirect(f"/probe/{cur.fetchone()['id']}")
 
     return render_template(
     "probe_new.html",
@@ -1122,6 +1404,7 @@ def add_song_to_probe(rehearsal_id):
                 planned_mix, mix_order, status
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'probe')
+            RETURNING id
         """, (
             title,
             artist,
@@ -1137,13 +1420,13 @@ def add_song_to_probe(rehearsal_id):
             final_planned_mix,
             int(mix_order) if mix_order else None
         ))
-        song_id = cur.lastrowid
+        song_id = cur.fetchone()["id"]
     else:
         song_id = song["id"]
 
     db.execute("""
-        INSERT OR IGNORE INTO rehearsal_songs (rehearsal_id, song_id)
-        VALUES (?, ?)
+        INSERT INTO rehearsal_songs (rehearsal_id, song_id)
+        VALUES (?, ?) ON CONFLICT DO NOTHING
     """, (rehearsal_id, song_id))
 
     db.commit()
@@ -1169,10 +1452,10 @@ def push_song(song_id):
 
         if not mix:
             cur = db.execute(
-                "INSERT INTO mixes (name) VALUES (?)",
+                "INSERT INTO mixes (name) VALUES (?) RETURNING id",
                 (song["planned_mix"],)
             )
-            mix_id = cur.lastrowid
+            mix_id = cur.fetchone()["id"]
         else:
             mix_id = mix["id"]
 
@@ -1271,11 +1554,12 @@ def setlist_new():
         cur = db.execute("""
             INSERT INTO setlists (name, date, note)
             VALUES (?, ?, ?)
+            RETURNING id
         """, (name, date, note))
 
         db.commit()
 
-        return redirect(f"/setlist/{cur.lastrowid}")
+        return redirect(f"/setlist/{cur.fetchone()['id']}")
 
     return render_template(
     "setlist_new.html",
@@ -1307,7 +1591,7 @@ def setlist_detail(setlist_id):
         s.artist AS song_artist,
         s.key AS key,
         m.name AS mix_name,
-        GROUP_CONCAT(ms.title, ', ') AS song_titles,
+        STRING_AGG(ms.title, ', ') AS song_titles,
         MIN(ms.key) AS mix_key
     FROM setlist_items i
     LEFT JOIN songs s
@@ -1317,7 +1601,12 @@ def setlist_detail(setlist_id):
     LEFT JOIN songs ms
         ON ms.mix_id = m.id AND ms.status='repertoar'
     WHERE i.setlist_id = ?
-    GROUP BY i.id
+    GROUP BY 
+        i.id,
+        s.title,
+        s.artist,
+        s.key,
+        m.name
     ORDER BY i.position
     """, (setlist_id,)).fetchall()
 
@@ -1555,7 +1844,7 @@ def setlist_add(setlist_id):
         SELECT 
             m.id,
             m.name,
-            GROUP_CONCAT(s.title, ', ') AS song_titles,
+            STRING_AGG(s.title, ', ') AS song_titles,
             MIN(s.key) AS mix_key
         FROM mixes m
         JOIN songs s ON s.mix_id = m.id
@@ -1690,20 +1979,34 @@ def setlist_reorder(setlist_id):
  
 
 # ---------- SETTINGS ----------
-@app.route("/settings", methods=["GET", "POST"], endpoint="settings_page")
+@app.route("/settings")
 def settings_page():
-    if request.method == "POST":
-        return redirect("/")
+
+    back_url = request.referrer or "/"
 
     return render_template(
         "settings.html",
         nav=nav_ctx(
             title="Postavke",
-            back_url="/",
+            back_url=back_url,
             mode="library",
             show_back=True
         )
     )
+
+# ---------- INFO SONG STATS ----------
+@app.route("/info_song")
+def info_song():
+    db = get_db()
+
+    stats = db.execute(
+        "SELECT * FROM v_home_stats"
+    ).fetchone()
+
+    if not stats:
+        abort(404)
+
+    return stats
 
 # ---------- CUSTOM 403 ----------
 @app.errorhandler(403)

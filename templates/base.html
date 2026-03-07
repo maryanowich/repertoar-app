@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Repka{% endblock %}</title>
+<title>{% block title %}Live Band Manager{% endblock %}</title>
 
 <style>
 
@@ -488,6 +488,29 @@ body.mode-setlist .action-btn.check {
     -webkit-mask-image: url("/static/icons/home.svg");   
 }
 
+.icon-info {
+    mask-image: url("/static/icons/info.svg");
+    -webkit-mask-image: url("/static/icons/info.svg");   
+}
+
+.icon-dropdown {
+    mask-image: url("/static/icons/dropdown.svg");
+    -webkit-mask-image: url("/static/icons/dropdown.svg");   
+}
+
+.icon-autoscroll {
+    mask-image: url("/static/icons/autoscroll.svg");
+    -webkit-mask-image: url("/static/icons/autoscroll.svg");   
+}
+
+.icon-font_size {
+    mask-image: url("/static/icons/font_size.svg");
+    -webkit-mask-image: url("/static/icons/font_size.svg");   
+}
+.icon-login {
+    mask-image: url("/static/icons/login.svg");
+    -webkit-mask-image: url("/static/icons/login.svg");   
+}
 /* ================= READ MODE – GLOBAL ================= */
 
 /* normalni dark mode ostaje kakav jest */
@@ -750,6 +773,22 @@ body:not(.read-mode) .mode-icon.light {
     mask-image: url("/static/icons/theme.svg");
     -webkit-mask-image: url("/static/icons/theme.svg");
 }
+
+.icon-language {
+    mask-image: url("/static/icons/language.svg");
+    -webkit-mask-image: url("/static/icons/language.svg");
+}
+
+.icon-globe {
+    mask-image: url("/static/icons/globe.svg");
+    -webkit-mask-image: url("/static/icons/globe.svg");
+}
+
+.icon-display_lock {
+    mask-image: url("/static/icons/display_lock.svg");
+    -webkit-mask-image: url("/static/icons/display_lock.svg");
+}
+
 </style>
 </head>
 
@@ -766,12 +805,12 @@ body:not(.read-mode) .mode-icon.light {
         {% if nav and nav.title %}
             <div class="nav-title">{{ nav.title }}</div>
         {% else %}
-            <div class="logo">Repka</div>
+            <div class="logo">LIVE BAND Manager</div>
         {% endif %}
     </div>
 
     <div class="nav-placeholder" style="display:flex; justify-content:flex-end;">
-        {% if nav and nav.show_settings %}
+        {% if nav and nav.show_settings != False %}
             <a href="/settings"
                style="
                     width:36px;

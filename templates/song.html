@@ -6,7 +6,7 @@
 <div
     style="
         position:fixed;
-        top:88px;
+        top:34px;
         right:16px;
         z-index:1000;
         display:flex;
@@ -21,9 +21,9 @@
 
     <!-- TOGGLE -->
     <button id="readModeToggle" onclick="toggleReadMode()" style="background:none;border:none;padding:0;cursor:pointer;">
-        <svg width="44" height="24" viewBox="0 0 44 24">
-            <rect width="44" height="24" rx="12" class="toggle-track"/>
-            <circle cx="12" cy="12" r="9" class="toggle-knob"/>
+        <svg width="36" height="20" viewBox="0 0 36 20">
+            <rect width="36" height="20" rx="10" class="toggle-track"/>
+            <circle cx="10" cy="10" r="7" class="toggle-knob"/>
         </svg>
     </button>
 
@@ -44,42 +44,41 @@
 <div style="display:flex; justify-content:center;">
     <div style="width:100%; max-width:720px; padding:20px;">
 
-        <div style="font-size:28px;font-weight:700;text-align:center;margin-bottom:6px;">
+        <div style="font-size:34px;font-weight:700;text-align:center;margin-bottom:6px;">
             {{ song.title }}
         </div>
 
-        <div style="font-size:16px;color:#aaa;text-align:center;margin-bottom:16px;">
+        <div style="font-size:20px;color:#aaa;text-align:center;margin-bottom:16px;">
             {{ song.artist }} • {{ song.key }}
         </div>
 
-        <pre class="lyrics" style="white-space:pre-wrap;font-size:24px;line-height:1.65;text-align:center;">
+        <pre class="lyrics" style="white-space:pre-wrap;line-height:1.65;text-align:center;">
 {{ song.lyrics }}
         </pre>
 
-    </div>
-</div>
-
-{% if set_items and current_index is not none %}
-
-<div class="set-position-indicator">
-    {{ current_index + 1 }} / {{ set_items|length }}
-</div>
-
-<div class="nav-arrow left" onclick="goToItem({{ current_index - 1 }})">‹</div>
-<div class="nav-arrow right" onclick="goToItem({{ current_index + 1 }})">›</div>
-
-<script>
-let setItems = {{ set_items|tojson }};
-let setId = "{{ request.args.get('set') }}";
-
-function goToItem(index) {
-    if (index < 0 || index >= setItems.length) return;
-    let item = setItems[index];
-    window.location.href = "/" + item.type + "/" + item.id + "?from=setlist&set=" + setId;
-}
-</script>
-
 <style>
+/* ===== FONT SIZE SETTINGS ===== */
+/* default size */
+.lyrics {
+    font-size:32px !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+body.font-small .lyrics {
+    font-size:26px !important;
+}
+
+body.font-normal .lyrics {
+    font-size:32px !important;
+}
+
+body.font-large .lyrics {
+    font-size:48px !important;
+}
+
 .nav-arrow {
     position: fixed;
     top: 50%;
@@ -123,17 +122,177 @@ body.read-mode .set-position-indicator {
     color: #000;
 }
 </style>
+
+{% if set_items and current_index is not none %}
+
+<div class="set-position-indicator">
+    {{ current_index + 1 }} / {{ set_items|length }}
+</div>
+
+<div class="nav-arrow left" onclick="goToItem({{ current_index - 1 }})">‹</div>
+<div class="nav-arrow right" onclick="goToItem({{ current_index + 1 }})">›</div>
+
+<script>
+let setItems = {{ set_items|tojson }};
+let setId = "{{ request.args.get('set') }}";
+
+function goToItem(index) {
+    if (index < 0 || index >= setItems.length) return;
+    let item = setItems[index];
+    window.location.href = "/" + item.type + "/" + item.id + "?from=setlist&set=" + setId;
+}
+</script>
 {% endif %}
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
+    /* READ MODE */
     if (localStorage.getItem("readMode") === "light") {
         document.body.classList.add("read-mode");
     }
+
+    /* FONT SIZE */
+    const savedFont = localStorage.getItem("fontSize") || "normal";
+
+    document.body.classList.remove("font-small","font-normal","font-large");
+    document.body.classList.add("font-" + savedFont);
+
+    /* DOUBLE TAP FONT SIZE (stage friendly) */
+    let lastTap = 0;
+    document.addEventListener("touchend", function (e) {
+        const now = new Date().getTime();
+        const tapLength = now - lastTap;
+
+        if (tapLength < 300 && tapLength > 0) {
+            const current = localStorage.getItem("fontSize") || "normal";
+
+            let next = "normal";
+            if (current === "small") next = "normal";
+            else if (current === "normal") next = "large";
+            else if (current === "large") next = "small";
+
+            applyFont(next);
+        }
+
+        lastTap = now;
+    });
+
+    /* LONG PRESS → AUTO SCROLL (teleprompter style) */
+    let pressTimer = null;
+    let autoScroll = false;
+    let scrollFrame = null;
+    let pressStart = 0;
+
+    /* READ AUTO SCROLL SPEED FROM SETTINGS */
+    const speedSetting = localStorage.getItem("autoScroll") || "normal";
+
+    /* ===== AUTO LOCK / WAKE LOCK ===== */
+    const autoLockSetting = "{{ auto_lock }}";
+    let wakeLock = null;
+    let autoLockTimer = null;
+
+    async function enableWakeLock(){
+        if(autoLockSetting === "off") return;
+        try{
+            if("wakeLock" in navigator){
+                wakeLock = await navigator.wakeLock.request("screen");
+            }
+        }catch(err){
+            console.log("WakeLock not available", err);
+        }
+    }
+
+    function resetAutoLockTimer(){
+        if(autoLockSetting === "off") return;
+
+        clearTimeout(autoLockTimer);
+
+        let minutes = parseInt(autoLockSetting);
+        if(!minutes) return;
+
+        autoLockTimer = setTimeout(() => {
+            if(wakeLock){
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }, minutes * 60 * 1000);
+    }
+
+    enableWakeLock();
+    resetAutoLockTimer();
+
+    let scrollSpeed = 0.35; // default
+
+    if(speedSetting === "sporo") scrollSpeed = 0.25;
+    if(speedSetting === "normalno") scrollSpeed = 0.35;
+    if(speedSetting === "brzo") scrollSpeed = 0.55;
+
+    function startAutoScroll(){
+        autoScroll = true;
+        if (navigator.vibrate) {
+            navigator.vibrate(15);
+        }
+        resetAutoLockTimer();
+
+        function step(){
+            if(!autoScroll) return;
+
+            // stop when reaching end of lyrics
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
+                stopAutoScroll();
+                return;
+            }
+
+            window.scrollBy(0, scrollSpeed);
+            scrollFrame = requestAnimationFrame(step);
+        }
+
+        step();
+    }
+
+    function stopAutoScroll(){
+        autoScroll = false;
+        if(scrollFrame){
+            cancelAnimationFrame(scrollFrame);
+            scrollFrame = null;
+        }
+    }
+
+    document.addEventListener("touchstart", () => {
+        pressStart = Date.now();
+        resetAutoLockTimer();
+
+        pressTimer = setTimeout(() => {
+            if(autoScroll){
+                stopAutoScroll();
+            } else {
+                startAutoScroll();
+            }
+        }, 350); // long press threshold
+    });
+
+    document.addEventListener("touchend", () => {
+        clearTimeout(pressTimer);
+
+        const pressDuration = Date.now() - pressStart;
+
+        // quick tap → stop auto scroll
+        if(pressDuration < 250 && autoScroll){
+            stopAutoScroll();
+        }
+    });
+
 });
 function toggleReadMode() {
     const isLight = document.body.classList.toggle("read-mode");
     localStorage.setItem("readMode", isLight ? "light" : "dark");
+}
+
+function applyFont(size){
+    document.body.classList.remove("font-small","font-normal","font-large");
+    document.body.classList.add("font-" + size);
+    localStorage.setItem("fontSize", size);
 }
 </script>
 {% endblock %}

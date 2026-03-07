@@ -2,26 +2,107 @@
 {% block title %}Postavke{% endblock %}
 
 {% block content %}
-<div style="padding:24px">
+<div style="padding: 24px;">
 
-    <h3 style="margin-bottom:16px;
-               font-size:22px;
-               font-weight:800;
+    <!-- ===== GENERAL SETTINGS ===== -->
+    <h3 id="generalHeader"
+        onclick="toggleGeneral()"
+        style="margin-bottom:16px;
+               font-size:20px;
+               font-weight:600;
                display:flex;
                align-items:center;
-               gap:10px;"
+               justify-content:space-between;
+               padding:10px 16px;
+               cursor:pointer;
+               border-bottom:1px solid #222;
+               padding-bottom:30px;">
+
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span class="icon icon-settings"></span>
+            Osnovno
+        </div>
+
+        <span id="generalToggleIcon" class="icon icon-dropdown"></span>
+    </h3>
+
+    <div id="generalSettings" style="display:none;flex-direction:column;">
+
+    <h3 style="margin-bottom:16px;
+               font-size:20px;
+               font-weight:600;
+               display:flex;
+               align-items:center;
+               gap:10px;
+               padding:10px 16px;"
                >
          <span class="icon icon-theme"></span>
         Tema
     </h3>
 
     <form method="post">
-        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <label style="color:#aaa;display:flex;align-items:center;gap:12px;margin-bottom:12px; border-bottom:1px solid #222; padding:10px 16px; gap: 10px; padding-bottom: 30px;">
             <input type="radio" name="theme" value="dark" checked>
             Tamno (zadano)
         </label>
+    </form>
 
-<!-- <div style="display:flex;justify-content:flex-start;margin-top:20px; border-bottom:1px solid #222;padding:10px 16px;">
+    <!-- JEZIK -->
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-language"></span>
+        Jezik
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 16px;">
+            <input type="radio" name="language" value="hr" checked>
+            Hrvatski
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 16px;">
+            <input type="radio" name="language" value="en">
+            English
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="language" value="de">
+            Deutsch
+        </label>
+    </form>
+
+    <!-- TRŽIŠTE -->
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-globe"></span>
+        Zemlja
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 16px;">
+            <input type="radio" name="market" value="hr" checked>
+            Hrvatska
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="market" value="international">
+            International
+        </label>
+    </form>
+
+<!-- LIGHT MODE (u planu) --
+
+    <div style="display:flex;justify-content:flex-start;margin-top:20px; border-bottom:1px solid #222;padding:10px 16px;">
     <button type="submit"
             style="
         width:36px;
@@ -42,8 +123,473 @@
         <span class="icon icon-save"
               style="width:16px;height:16px;"></span>
     </button>
-</div> -->
-    </form>
+</div>-->
 
 </div>
+
+<!-- INFO SONG STATS -->
+<div style="margin-top:24px;">
+
+    <h3 id="statsHeader" onclick="toggleStats()"
+        style="margin-bottom:16px;
+               font-size:20px;
+               font-weight:600;
+               display:flex;
+               align-items:center;
+               justify-content:space-between;
+               padding:10px 16px;
+               cursor:pointer;
+               border-bottom:1px solid #222;
+               padding-bottom:30px;">
+        
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span class="icon icon-info"></span>
+            Statistika pjesama 
+        </div>
+
+        <span id="statsToggleIcon" class="icon icon-dropdown"></span>
+    </h3>
+
+    <div id="songStats" style="
+    font-size:16px;
+    line-height:1.8;
+    color:#aaa;
+    display:none;
+    flex-direction:column;
+    padding:0 16px;
+    border-bottom:1px solid #222;
+    padding-bottom: 30px;
+">
+        Učitavanje...
+    </div>
+
+</div>
+<script>
+const style = document.createElement("style");
+style.innerHTML = `
+#statsToggleIcon {
+    transition: transform 0.25s ease;
+}
+
+#statsToggleIcon.open {
+    transform: rotate(180deg);
+}
+
+/* clickable header feedback */
+#statsHeader {
+    transition: background 0.2s ease;
+}
+
+#statsHeader:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+#statsHeader:active {
+    background: rgba(255,255,255,0.08);
+}
+`;
+document.head.appendChild(style);
+function toggleStats() {
+
+    const stats = document.getElementById("songStats");
+    const icon = document.getElementById("statsToggleIcon");
+    const header = icon.closest("h3");
+
+    if (stats.style.display === "none") {
+        stats.style.display = "flex";
+        header.style.borderBottom = "none";
+        header.style.paddingBottom = "10px";
+        icon.classList.add("open");
+        loadSongStats();  // load data when opened
+    } else {
+        stats.style.display = "none";
+        header.style.borderBottom = "1px solid #222";
+        header.style.paddingBottom = "30px";
+        icon.classList.remove("open");
+    }
+}
+
+async function loadSongStats() {
+
+    try {
+        const res = await fetch("/api/song_stats");
+        const stats = await res.json();
+
+        const el = document.getElementById("songStats");
+
+        el.innerHTML = `
+<!-- ===== UKUPNI RESURSI ===== -->
+<div style="padding-bottom:10px;font-size:18px;color:#fff;margin-top:6px;display:flex;justify-content:center;text-align:center;width:100%;">
+Ukupno
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#1b1530;border-radius:12px;margin-bottom:6px;">
+    <span>Pjesama</span>
+    <b>${stats.total_songs}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#151028;border-radius:12px;margin-bottom:6px;">
+    <span>Mixeva</span>
+    <b>${stats.total_mixes ?? "-"}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#1b1530;border-radius:12px;margin-bottom:6px;">
+    <span>Setlista</span>
+    <b>${stats.total_setlists ?? "-"}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#151028;border-radius:12px;margin-bottom:6px;">
+    <span>Proba</span>
+    <b>${stats.total_rehearsals ?? "-"}</b>
+</div>
+
+
+<!-- ===== STRUKTURA REPERTOARA ===== -->
+<div style="padding-top:20px;padding-bottom:10px;font-size:18px;color:#fff;margin-top:10px;display:flex;justify-content:center;text-align:center;width:100%;">
+Struktura
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#13202f;border-radius:12px;margin-bottom:6px;">
+    <span>Spora</span>
+    <b>${stats.tempo_spora ?? "-"}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#0f1a26;border-radius:12px;margin-bottom:6px;">
+    <span>Srednja</span>
+    <b>${stats.tempo_srednja ?? "-"}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#13202f;border-radius:12px;margin-bottom:6px;">
+    <span>Brza</span>
+    <b>${stats.tempo_brza ?? "-"}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#13202f;border-radius:12px;margin-bottom:6px;">
+    <span>Domaće</span>
+    <b>${stats.total_domace}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#0f1a26;border-radius:12px;margin-bottom:6px;">
+    <span>Strano</span>
+    <b>${stats.total_strano}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#13202f;border-radius:12px;margin-bottom:6px;">
+    <span>Muški vokal</span>
+    <b>${stats.total_musko}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#0f1a26;border-radius:12px;margin-bottom:6px;">
+    <span>Ženski vokal</span>
+    <b>${stats.total_zensko}</b>
+</div>
+
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#13202f;border-radius:12px;margin-bottom:6px;">
+    <span>Instrumentali</span>
+    <b>${stats.total_instrumental}</b>
+</div>
+
+<!-- ===== ŽANROVI ===== -->
+<div style="padding-top:20px;padding-bottom:10px;font-size:18px;color:#fff;margin-top:10px;display:flex;justify-content:center;text-align:center;width:100%;">
+Žanrovi
+</div>
+
+${(stats.genres ?? []).map((g, i) => `
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:${i % 2 === 0 ? '#2a1313' : '#211010'};border-radius:12px;margin-bottom:6px;">
+    <span>${g.genre}</span>
+    <b>${g.count}</b>
+</div>
+`).join("")}
+
+<!-- ===== REGIJE ===== -->
+<div style="padding-top:20px;padding-bottom:10px;font-size:18px;color:#fff;margin-top:10px;display:flex;justify-content:center;text-align:center;width:100%;">
+Regije
+</div>
+
+${(stats.regions ?? []).map((r, i) => `
+<div style="display:flex;justify-content:space-between;padding:10px 12px;background:${i % 2 === 0 ? '#13281c' : '#0f2116'};border-radius:12px;margin-bottom:6px;">
+    <span>${r.region}</span>
+    <b>${r.count}</b>
+</div>
+`).join("")}
+<div style="margin-top:16px;padding-bottom:30px;"></div>
+        `;
+
+    } catch (err) {
+
+        document.getElementById("songStats").innerHTML =
+            "Statistika nije dostupna";
+
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadSongStats);
+</script>
+
+    <!-- ===== PERFORMANCE SETTINGS ===== -->
+    <h3 id="performanceHeader"
+        onclick="togglePerformance()"
+        style="margin-bottom:16px;
+               font-size:20px;
+               font-weight:600;
+               display:flex;
+               align-items:center;
+               justify-content:space-between;
+               padding:10px 16px;
+               cursor:pointer;
+               border-bottom:1px solid #222;
+               padding-bottom:30px;">
+
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span class="icon icon-probe"></span>
+            Izvođenje
+        </div>
+
+        <span id="performanceToggleIcon" class="icon icon-dropdown"></span>
+    </h3>
+
+    <div id="performanceSettings" style="display:none;flex-direction:column;">
+
+    <!-- AUTO SCROLL -->
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-autoscroll"></span>
+        Automatsko listanje teksta pjesama
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="autoscroll" value="off" checked>
+            Isključeno
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="autoscroll" value="slow">
+            Sporo
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="autoscroll" value="medium">
+            Srednje
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="autoscroll" value="fast">
+            Brzo
+        </label>
+    </form>
+
+    <!-- VELIČINA TEKSTA -->
+
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-font_size"></span>
+        Veličina teksta pjesama
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="fontsize" value="small">
+            Manji
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="fontsize" value="normal" checked>
+            Normalan
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="fontsize" value="large">
+            Veći
+        </label>
+    </form>
+
+    <!-- AUTO LOCK SCREEN -->
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-display_lock"></span>
+        Automatsko zaključavanje ekrana
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 16px;">
+            <input type="radio" name="autolock" value="off" checked>
+            Nikad
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 16px;">
+            <input type="radio" name="autolock" value="5">
+            Nakon 5 min
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="autolock" value="15">
+            Nakon 15 min
+        </label>
+    </form>
+
+    </div>
+
+    <!-- ODJAVA -->
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;
+            border-bottom:1px solid #222;
+            padding-bottom:30px;">
+        <span class="icon icon-login"></span>
+        Odjava
+        <span style="font-size: 16px;color:#aaa;margin-left:6px;">(u pripremi)</span>
+    </h3>
+
+    <!-- APP INFO -->
+    <div style="
+        text-align:center;
+        color:#777;
+        font-size:14px;
+        margin-top:30px;
+        line-height:1.6;
+    ">
+        <div style="font-size:16px;color:#aaa;">Live Band Manager</div>
+        <div>verzija 0.9 beta</div>
+        <div style="margin-top:4px;">© 2026</div>
+    </div>
+
+<script>
+/* ================= LOAD SAVED SETTINGS ================= */
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* FONT SIZE */
+    const savedFont = localStorage.getItem("fontSize");
+    if (savedFont) {
+        const el = document.querySelector(`input[name="fontsize"][value="${savedFont}"]`);
+        if (el) el.checked = true;
+    }
+
+    /* AUTO SCROLL */
+    const savedScroll = localStorage.getItem("autoScroll");
+    if (savedScroll) {
+        const el = document.querySelector(`input[name="autoscroll"][value="${savedScroll}"]`);
+        if (el) el.checked = true;
+    }
+
+});
+
+/* ================= SAVE FONT SIZE ================= */
+document.querySelectorAll('input[name="fontsize"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+        localStorage.setItem("fontSize", e.target.value);
+    });
+});
+
+/* ================= SAVE AUTO SCROLL ================= */
+document.querySelectorAll('input[name="autoscroll"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+        localStorage.setItem("autoScroll", e.target.value);
+    });
+});
+
+/* ===== SETTINGS: LANGUAGE ===== */
+document.querySelectorAll('input[name="language"]').forEach(radio => {
+    radio.addEventListener("change", async (e) => {
+
+        const lang = e.target.value;
+
+        try {
+            await fetch(`/settings/language/${lang}`, {
+                method: "POST"
+            });
+        } catch (err) {
+            console.error("Language update failed");
+        }
+    });
+});
+
+/* ===== SETTINGS: MARKET ===== */
+document.querySelectorAll('input[name="market"]').forEach(radio => {
+    radio.addEventListener("change", async (e) => {
+
+        const market = e.target.value;
+
+        try {
+            await fetch(`/settings/market/${market}`, {
+                method: "POST"
+            });
+        } catch (err) {
+            console.error("Market update failed");
+        }
+    });
+});
+
+/* ================= LOAD AUTO LOCK ================= */
+const savedLock = localStorage.getItem("autoLock");
+if (savedLock) {
+    const el = document.querySelector(`input[name="autolock"][value="${savedLock}"]`);
+    if (el) el.checked = true;
+}
+
+/* ================= SAVE AUTO LOCK ================= */
+document.querySelectorAll('input[name="autolock"]').forEach(radio => {
+    radio.addEventListener("change", async (e) => {
+
+        const mode = e.target.value;
+
+        localStorage.setItem("autoLock", mode);
+
+        try {
+            await fetch(`/settings/autolock/${mode}`, {
+                method: "POST"
+            });
+        } catch (err) {
+            console.error("Auto lock update failed");
+        }
+    });
+});
+/* ===== GENERAL DROPDOWN ===== */
+function toggleGeneral() {
+    const el = document.getElementById("generalSettings");
+    const icon = document.getElementById("generalToggleIcon");
+
+    if (el.style.display === "none") {
+        el.style.display = "flex";
+        icon.classList.add("open");
+    } else {
+        el.style.display = "none";
+        icon.classList.remove("open");
+    }
+}
+
+/* ===== PERFORMANCE DROPDOWN ===== */
+function togglePerformance() {
+    const el = document.getElementById("performanceSettings");
+    const icon = document.getElementById("performanceToggleIcon");
+
+    if (el.style.display === "none") {
+        el.style.display = "flex";
+        icon.classList.add("open");
+    } else {
+        el.style.display = "none";
+        icon.classList.remove("open");
+    }
+}
+</script>
+
 {% endblock %}
