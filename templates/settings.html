@@ -2,6 +2,26 @@
 {% block title %}Postavke{% endblock %}
 
 {% block content %}
+<style>
+/* ===== SETTINGS CARD STYLE (modern UI) ===== */
+#generalSettings,
+#songStats,
+#performanceSettings {
+    background: #111114;
+    border-radius: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+}
+
+
+/* section hover feedback */
+#generalHeader:hover,
+#performanceHeader:hover,
+#statsHeader:hover {
+    background: rgba(255,255,255,0.04);
+}
+</style>
 <div style="padding: 24px;">
 
     <!-- ===== GENERAL SETTINGS ===== -->
@@ -16,10 +36,12 @@
                padding:10px 16px;
                cursor:pointer;
                border-bottom:1px solid #222;
+               padding-top:30px;
+               border-top: 1px solid #222;
                padding-bottom:30px;">
 
         <div style="display:flex;align-items:center;gap:10px;">
-            <span class="icon icon-settings"></span>
+            <span class="icon icon-wrench"></span>
             Osnovno
         </div>
 
@@ -172,6 +194,16 @@ style.innerHTML = `
 }
 
 #statsToggleIcon.open {
+    transform: rotate(180deg);
+}
+
+#generalToggleIcon,
+#performanceToggleIcon {
+    transition: transform 0.25s ease;
+}
+
+#generalToggleIcon.open,
+#performanceToggleIcon.open {
     transform: rotate(180deg);
 }
 
@@ -341,14 +373,44 @@ document.addEventListener("DOMContentLoaded", loadSongStats);
                padding-bottom:30px;">
 
         <div style="display:flex;align-items:center;gap:10px;">
-            <span class="icon icon-probe"></span>
-            Izvođenje
+            <span class="icon icon-live_playing"></span>
+            Izvedba
         </div>
 
         <span id="performanceToggleIcon" class="icon icon-dropdown"></span>
     </h3>
 
     <div id="performanceSettings" style="display:none;flex-direction:column;">
+
+    <!-- VELIČINA TEKSTA -->
+
+    <h3 style="margin-bottom:16px;
+            font-size:20px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 16px;">
+        <span class="icon icon-font_size"></span>
+        Veličina teksta pjesama
+    </h3>
+
+    <form>
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="fontsize" value="small">
+            Manji
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
+            <input type="radio" name="fontsize" value="normal" checked>
+            Normalan
+        </label>
+
+        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
+            <input type="radio" name="fontsize" value="large">
+            Veći
+        </label>
+    </form>
 
     <!-- AUTO SCROLL -->
     <h3 style="margin-bottom:16px;
@@ -381,36 +443,6 @@ document.addEventListener("DOMContentLoaded", loadSongStats);
         <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
             <input type="radio" name="autoscroll" value="fast">
             Brzo
-        </label>
-    </form>
-
-    <!-- VELIČINA TEKSTA -->
-
-    <h3 style="margin-bottom:16px;
-            font-size:20px;
-            font-weight:600;
-            display:flex;
-            align-items:center;
-            gap:10px;
-            padding:10px 16px;">
-        <span class="icon icon-font_size"></span>
-        Veličina teksta pjesama
-    </h3>
-
-    <form>
-        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
-            <input type="radio" name="fontsize" value="small">
-            Manji
-        </label>
-
-        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:0px solid #222;padding:10px 16px;">
-            <input type="radio" name="fontsize" value="normal" checked>
-            Normalan
-        </label>
-
-        <label style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:1px solid #222;padding:10px 16px;padding-bottom:30px;">
-            <input type="radio" name="fontsize" value="large">
-            Veći
         </label>
     </form>
 

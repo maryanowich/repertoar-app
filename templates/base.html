@@ -10,9 +10,9 @@
 /* ================= THEME VARIABLES ================= */
 
 body.theme-dark {
-    --bg-main: #000;
-    --text-main: #f5f5f5;
-    --nav-bg: #000;
+    --bg-main: #121214;
+    --text-main: #f2f2f7;
+    --nav-bg: rgba(18,18,20,0.85);
 }
 
 body.theme-light {
@@ -31,8 +31,23 @@ body.theme-light {
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
-    background: var(--bg-main);
+    background:
+        radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 60%),
+        var(--bg-main);
     color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+}
+
+/* ===== SUBTLE APP AMBIENT LIGHT ===== */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(600px circle at 50% -100px, rgba(255,255,255,0.06), transparent 70%);
+    z-index: -1;
 }
 
 
@@ -41,19 +56,19 @@ body {
    ================================================= */
 
 body.mode-library {
-    background: #000;
+    background: #161618;
 }
 
 body.mode-library .nav{
-    background:#000;
+    background:#161618;
     
 }
 body.mode-library .action-bar {
-    background: #000;
+    background: #161618;
 }
 
 body.mode-library .content {
-    background: #000;
+    background: #161618;
 }
 
 /* bijele kartice za pjesme / mixeve */
@@ -71,25 +86,25 @@ body.mode-library .mode-scope .meta {
    ================================================= */
 
    body.mode-setlist {
-    background: #000;
+    background: #161618;
 }
 
 
 body.mode-setlist .nav {
-    background: #000;
+    background: #161618;
      
 }
 
 body.mode-setlist .action-bar {
-    background: #000;
+    background: #161618;
 }
 
 body.mode-setlist .nav-title {
-    background: #000;
+    background: #161618;
     color: #facc15;
 }
 body.mode-setlist .content {
-    background: #000;
+    background: #161618;
     width: 100%;
     box-sizing: border-box;
 }
@@ -112,22 +127,21 @@ body.mode-setlist .mode-scope .meta {
    ================================================= */
 
    body.mode-rehearsal {
-    background: #000;
+    background: #161618;
 }
 
 
 body.mode-rehearsal .nav{
-    background: #000;
+    background: #161618;
         
 }
 
 body.mode-rehearsal .action-bar {
-   background: #000;
-
+   background: #161618;
 }
 
 body.mode-rehearsal .nav-title {
-    background: #000;
+    background: #161618;
     color: #6ee7b7;
 }
 
@@ -152,6 +166,8 @@ body.mode-rehearsal .mode-scope .meta {
 .nav {
     padding: 12px 16px;
     background: var(--nav-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -183,13 +199,14 @@ body.mode-rehearsal .mode-scope .meta {
 
 .logo {
     font-family: "Neuropol", cursive;
-    font-size: 30px;
-    color: #ffffff;
+    font-size: 20px;
+    color: #F5F5F7;
 }
 
 .nav-title {
     font-size: 20px;
     font-weight: 700;
+    letter-spacing: 0.3px;
 }
 
 /* =================================================
@@ -218,20 +235,33 @@ body.mode-rehearsal .mode-scope .meta {
 }   
 
 .list {
-    padding: 12px;
+    padding: 16px;
     width: 100%;
     box-sizing: border-box;
 }
 
 .song-row {
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     box-sizing: border-box;
+    background: #1c1c1f;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.song-row:active {
+    background: #242428;
+    transform: scale(0.98);
+}
+
+.song-row:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.45);
 }
 
 .song-main {
@@ -387,6 +417,8 @@ body.mode-setlist .action-btn.check {
 }
 /* =================================================
    TOOLBAR (STANDARD)
+   Default toolbar style. Individual templates can
+   override background by redefining .toolbar locally.
    ================================================= */
 
 .toolbar {
@@ -395,6 +427,7 @@ body.mode-setlist .action-btn.check {
     z-index: 10;
     padding: 14px 16px;
     border-bottom: 1px solid #222;
+    background: var(--bg-main);
 }
 
 /* ================= ICON SYSTEM ================= */
@@ -667,7 +700,7 @@ body:not(.read-mode) .mode-icon.light {
     align-items: center;
 
     height: 72px;
-    background: rgba(0,0,0,0.92);
+    background: rgba(22,22,24,0.95);
     border-top: 1px solid #222;
     z-index: 100;
 }
@@ -789,6 +822,16 @@ body:not(.read-mode) .mode-icon.light {
     -webkit-mask-image: url("/static/icons/display_lock.svg");
 }
 
+.icon-live_playing {
+    mask-image: url("/static/icons/live_playing.svg");
+    -webkit-mask-image: url("/static/icons/live_playing.svg");
+}
+
+.icon-wrench {
+    mask-image: url("/static/icons/wrench.svg");
+    -webkit-mask-image: url("/static/icons/wrench.svg");
+}
+
 </style>
 </head>
 
@@ -805,12 +848,12 @@ body:not(.read-mode) .mode-icon.light {
         {% if nav and nav.title %}
             <div class="nav-title">{{ nav.title }}</div>
         {% else %}
-            <div class="logo">LIVE BAND Manager</div>
+            <div class="logo">LiveBand Manager</div>
         {% endif %}
     </div>
 
     <div class="nav-placeholder" style="display:flex; justify-content:flex-end;">
-        {% if nav and nav.show_settings != False %}
+        {% if nav and (nav.show_settings_home or not nav.show_back) %}
             <a href="/settings"
                style="
                     width:36px;
@@ -857,6 +900,10 @@ body:not(.read-mode) .mode-icon.light {
     <a href="/probe" class="nav-item" data-route="/probe">
         <span class="icon icon-probe"></span>
         <span>Probe</span>
+    </a>
+    <a href="/settings" class="nav-item" data-route="/settings">
+        <span class="icon icon-settings"></span>
+        <span>Postavke</span>
     </a>
 </footer>
 {% endif %}
