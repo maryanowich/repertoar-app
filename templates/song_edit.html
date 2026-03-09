@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Uredi pjesmu{% endblock %}
 
+
 {% block content %}
 
 <div style=margin:auto;padding:20px;>
@@ -169,32 +170,22 @@
           <div style="display:flex;justify-content:center;margin-top:24px;">
             <button type="submit"
                     style="
-                        padding:10px 16px;
-                        background:#fff;
-                        color:#000;
-                        border-radius:12px;
-                        border:1px solid #ddd;
-                        font-weight:600;
-                        font-size:16px;
-                        display:flex;
+                        display:inline-flex;
                         align-items:center;
-                        gap:10px;
+                        justify-content:center;
+                        gap:8px;
+                        padding:12px 22px;
+                        background:#1f1f23;
+                        border:1px solid #2a2a30;
+                        color:#fff;
+                        border-radius:12px;
+                        font-weight:600;
+                        font-size:15px;
+                        cursor:pointer;
                     ">
-                <span style="
-                    width:18px;
-                    height:18px;
-                    display:inline-block;
-                    background-color:currentColor;
-                    mask-image:url('/static/icons/save.svg');
-                    -webkit-mask-image:url('/static/icons/save.svg');
-                    mask-repeat:no-repeat;
-                    mask-position:center;
-                    mask-size:contain;
-                    -webkit-mask-repeat:no-repeat;
-                    -webkit-mask-position:center;
-                    -webkit-mask-size:contain;
-                "></span>
-                
+                <span class="icon icon-save"
+                      style="width:16px;height:16px;background-color:currentColor;"></span>
+                Spremi
             </button>
         </div>
         

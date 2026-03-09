@@ -3,6 +3,27 @@
 
 {% block content %}
 
+{% block floating_controls %}
+<a href="/mix/new"
+   style="
+        position:fixed;
+        top:30px;
+        right:16px;
+        width:36px;
+        height:36px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#aaa;
+        text-decoration:none;
+        background:none;
+        border:none;
+        z-index:1000;
+   ">
+    <span class="icon icon-plus"></span>
+</a>
+{% endblock %}
+
 <!-- TOOLBAR -->
 <div style="
     position:sticky;
@@ -13,7 +34,7 @@
     border-bottom:1px solid #222;
 ">
 <form method="get"
-style="display:flex;align-items:flex-start;gap:10px;">
+style="display:flex;align-items:center;gap:10px;">
 
 <!-- LEFT SPACER (balans) -->
 <div style="width:48px;"></div>
@@ -23,12 +44,12 @@ style="display:flex;align-items:flex-start;gap:10px;">
 
     <input type="text" name="q"
       value="{{ filters.q or '' }}"
-      placeholder="🔍 Traži mix, pjesmu ili izvođača"
+      placeholder="🔍 Traži "
       style="
       max-width:420px;
       width:100%;
-      height:48px;
-      min-height:48px;
+      height:36px;
+      min-height:36px;
       border-radius:12px;
       background:#111;
       border:1px solid #333;
@@ -40,7 +61,7 @@ style="display:flex;align-items:flex-start;gap:10px;">
 {% if filters_open %}
   <a href="{{ request.path }}"
    style="
-        height:48px;
+        height:36px;
         display:inline-flex;
         align-items:center;
         gap:8px;
@@ -59,7 +80,7 @@ style="display:flex;align-items:flex-start;gap:10px;">
   {% else %}
   <a href="{{ request.path }}?filters=1"
    style="
-        height:48px;
+        height:36px;
         display:inline-flex;
         align-items:center;
         gap:8px;
@@ -77,22 +98,8 @@ style="display:flex;align-items:flex-start;gap:10px;">
 
   {% endif %}
 </div>
-<!-- RIGHT -->
-<a href="/mix/new" class="action-btn add"
-   style="
-        width:36px;
-        height:36px;
-        border-radius:10px;
-        background:#111;
-        color:#fff;
-        text-decoration:none;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border:1px solid #333;
-   ">
-    <span class="icon icon-plus"></span>
-</a>
+<!-- RIGHT SPACER (balans) -->
+<div style="width:48px;"></div>
 
 </form>
 </div>
@@ -100,11 +107,15 @@ style="display:flex;align-items:flex-start;gap:10px;">
 <!-- FILTERI -->
 <div style="
 display:{{ 'block' if filters_open else 'none' }};
-background:#000;padding:16px;border-bottom:1px solid #222;
+background:#161618;
+padding:12px 16px 0 16px;
+border-bottom:1px solid #26262b;
 ">
 
 <!-- ORIGIN -->
-<div style="display:flex;gap:10px;margin-bottom:14px;">
+<div class="filter-section">
+<div class="filter-title">Porijeklo</div>
+<div class="filter-card">
 {% for o in ["Domaće","Strano"] %}
 <form method="get">
 {% for k,v in filters.items() if k!='origin' and v %}
@@ -113,10 +124,13 @@ background:#000;padding:16px;border-bottom:1px solid #222;
 <input type="hidden" name="filters" value="1">
 <button {% if filters.origin!=o %}name="origin" value="{{o}}"{% endif %}
 style="
-min-height:48px;padding:14px 22px;
-font-size:16px;font-weight:700;
-border-radius:14px;border:1px solid #8a7a00;
-background:{% if filters.origin==o %}#ffd500{% else %}#000{% endif %};
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #8a7a00;
+background:{% if filters.origin==o %}#ffd500{% else %}#161618{% endif %};
 color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
 ">
 {{ o }}
@@ -124,9 +138,12 @@ color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
 </form>
 {% endfor %}
 </div>
+</div>
 
 <!-- VOCAL -->
-<div style="display:flex;gap:10px;margin-bottom:14px;">
+<div class="filter-section">
+<div class="filter-title">Vokal</div>
+<div class="filter-card">
 {% for v in ["Muško","Žensko","Duet"] %}
 <form method="get">
 {% for k,vv in filters.items() if k!='vocal' and vv %}
@@ -135,13 +152,13 @@ color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
 <input type="hidden" name="filters" value="1">
 <button {% if filters.vocal!=v %}name="vocal" value="{{v}}"{% endif %}
 style="
-min-height:48px;
-padding:14px 22px;
-font-size:16px;
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
 font-weight:700;
 border-radius:14px;
 border:1px solid #6b21a8;
-background:{% if filters.vocal==v %}#a855f7{% else %}#000{% endif %};
+background:{% if filters.vocal==v %}#a855f7{% else %}#161618{% endif %};
 color:{% if filters.vocal==v %}#000{% else %}#d8b4fe{% endif %};
 ">
 {{ v }}
@@ -149,10 +166,12 @@ color:{% if filters.vocal==v %}#000{% else %}#d8b4fe{% endif %};
 </form>
 {% endfor %}
 </div>
+</div>
 
-<!-- TEMPO + INSTR -->
-<div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
-
+<!-- TEMPO -->
+<div class="filter-section">
+<div class="filter-title">Tempo</div>
+<div class="filter-card">
 {% for t in ["Spora","Srednja","Brza"] %}
 <form method="get">
 {% for k,v in filters.items() if k!='tempo' and v %}
@@ -161,53 +180,73 @@ color:{% if filters.vocal==v %}#000{% else %}#d8b4fe{% endif %};
 <input type="hidden" name="filters" value="1">
 <button {% if filters.tempo!=t %}name="tempo" value="{{t}}"{% endif %}
 style="
-min-height:48px;padding:14px 20px;
-font-size:16px;
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
 font-weight:700;
 border-radius:14px;
 border:1px solid #2a3b55;
-background:{% if filters.tempo==t %}#2a6cff{% else %}#000{% endif %};
+background:{% if filters.tempo==t %}#2a6cff{% else %}#161618{% endif %};
 color:{% if filters.tempo==t %}#fff{% else %}#8aa4d6{% endif %};
 ">
 {{ t }}
 </button>
 </form>
 {% endfor %}
+</div>
+</div>
 
-<form method="get" style="margin-left:auto;">
+<!-- TIP -->
+<div class="filter-section">
+<div class="filter-title">Tip</div>
+<div class="filter-card">
+
+<form method="get">
 {% for k,v in filters.items() if k!='instrumental' and v %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
 <input type="hidden" name="filters" value="1">
 <button {% if filters.instrumental!="1" %}name="instrumental" value="1"{% endif %}
 style="
-min-height:48px;padding:14px 26px;
-font-size:16px;font-weight:800;
-border-radius:14px;border:1px solid #00ffe1;
-background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#000{% endif %};
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #00ffe1;
+background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#161618{% endif %};
 color:{% if filters.instrumental=="1" %}#000{% else %}#00ffe1{% endif %};
+display:flex;
+align-items:center;
+justify-content:center;
+gap:6px;
 ">
-🎹 INSTR
+<span class="icon icon-piano"></span> INSTR
 </button>
 </form>
 
 </div>
+</div>
 
 <!-- GENRE -->
-<div style="margin-bottom:14px;">
-{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky", "Jazzy"] %}
-<form method="get" style="display:inline;">
+<div class="filter-section">
+<div class="filter-title">Žanr</div>
+<div class="filter-card">
+{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+<form method="get">
 {% for k,v in filters.items() if k!='genre' and v %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
 <input type="hidden" name="filters" value="1">
 <button {% if filters.genre!=g %}name="genre" value="{{g}}"{% endif %}
 style="
-min-height:48px;padding:14px 22px;
-font-size:16px;font-weight:600;
-margin-right:8px;margin-bottom:8px;
-border-radius:16px;border:1px solid #5a2a2a;
-background:{% if filters.genre==g %}#ff5a5a{% else %}#000{% endif %};
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:600;
+border-radius:16px;
+border:1px solid #5a2a2a;
+background:{% if filters.genre==g %}#ff5a5a{% else %}#161618{% endif %};
 color:{% if filters.genre==g %}#fff{% else %}#ff9a9a{% endif %};
 ">
 {{ g }}
@@ -215,28 +254,34 @@ color:{% if filters.genre==g %}#fff{% else %}#ff9a9a{% endif %};
 </form>
 {% endfor %}
 </div>
+</div>
 
 <!-- REGIJA -->
-<div>
+<div class="filter-section">
+<div class="filter-title">Regija</div>
+<div class="filter-card">
 {% for r in ["Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BIH"] %}
-<form method="get" style="display:inline;">
+<form method="get">
 {% for k,v in filters.items() if k!='regija' and v %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
 <input type="hidden" name="filters" value="1">
 <button {% if filters.regija!=r %}name="regija" value="{{r}}"{% endif %}
 style="
-min-height:48px;padding:14px 22px;
-font-size:16px;font-weight:600;
-margin-right:8px;margin-bottom:8px;
-border-radius:16px;border:1px solid #2a5a3a;
-background:{% if filters.regija==r %}#2ecc71{% else %}#000{% endif %};
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:600;
+border-radius:16px;
+border:1px solid #2a5a3a;
+background:{% if filters.regija==r %}#2ecc71{% else %}#161618{% endif %};
 color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
 ">
 {{ r }}
 </button>
 </form>
 {% endfor %}
+</div>
 </div>
 
 </div>

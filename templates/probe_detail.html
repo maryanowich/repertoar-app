@@ -31,21 +31,26 @@
             {% if rehearsal.note %} • {{ rehearsal.note }}{% endif %}
         </div>
     </div>
+</div>
 
-    <!-- TOGGLE ADD / EDIT SONG BUTTON -->
-   <button id="toggle-add-btn"
+<!-- TOGGLE ADD / EDIT SONG BUTTON -->
+<button id="toggle-add-btn"
     onclick="toggleAddSong()"
     style="
+        position:fixed;
+        top:30px;
+        right:16px;
         width:36px;
         height:36px;
-        border-radius:10px;
-        background:#14532d;
-        color:#fff;
         display:flex;
         align-items:center;
         justify-content:center;
+        color:#aaa;
+        text-decoration:none;
+        background:none;
+        border:none;
+        z-index:1000;
 
-        /* ⬇️ KLJUČNO */
         border:0;
         outline:none;
         box-shadow:none;
@@ -58,13 +63,11 @@
         <span class="icon icon-close" style="color:#ffff;"></span>
         
     {% else %}
-        <span class="icon icon-plus" style="color:#fff;"></span>
+        <span class="icon icon-plus"></span>
         
     {% endif %}
 </span>
 </button>
-
-</div>
 
 <!-- PJESME NA PROBI -->
 <div class="list">
@@ -315,25 +318,29 @@
 <div style="text-align:center;margin-top:16px;">
     <button type="submit"
         style="
-            padding:10px 16px;
-            background:#14532d;
-            color:#000;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            padding:12px 22px;
+            background:#1f1f23;
+            border:1px solid #2a2a30;
+            color:#fff;
             border-radius:12px;
-            border:0px solid #ddd;
             font-weight:600;
-            font-size:16px;
+            font-size:15px;
+            cursor:pointer;
         ">
     <span style="display:inline-flex;align-items:center;gap:8px;">
         {% if edit_song %}
-            <span class="icon icon-save" style="color:#fff;"></span>
-            
+            <span class="icon icon-save" style="width:16px;height:16px;background-color:currentColor;"></span>
+            Spremi
         {% else %}
-            <span class="icon icon-plus" style="color:#fff;"></span>
-            
+            <span class="icon icon-plus" style="width:16px;height:16px;background-color:currentColor;"></span>
+            Dodaj
         {% endif %}
     </span>
 </button>
-
 </div>
 
 </form>
@@ -352,7 +359,7 @@
     
             btn.innerHTML = `
                 <span style="display:inline-flex;align-items:center;gap:8px;">
-                    <span class="icon icon-plus" style="color:#fff;"></span>
+                    <span class="icon icon-plus"></span>
                 </span>
             `;
         } else {
@@ -361,7 +368,7 @@
     
             btn.innerHTML = `
                 <span style="display:inline-flex;align-items:center;gap:8px;">
-                    <span class="icon icon-close" style="color:#fff;"></span>
+                    <span class="icon icon-close"></span>
                 </span>
             `;
     

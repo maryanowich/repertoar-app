@@ -31,9 +31,7 @@ body.theme-light {
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
-    background:
-        radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 60%),
-        var(--bg-main);
+    background: var(--bg-main);
     color: var(--text-main);
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
@@ -204,7 +202,7 @@ body.mode-rehearsal .mode-scope .meta {
 }
 
 .nav-title {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.3px;
 }
@@ -428,6 +426,55 @@ body.mode-setlist .action-btn.check {
     padding: 14px 16px;
     border-bottom: 1px solid #222;
     background: var(--bg-main);
+}
+
+/* =================================================
+   FILTER PANEL – APPLE STYLE (MOBILE FRIENDLY)
+   ================================================= */
+
+.filter-section{
+    margin-bottom:18px;
+}
+
+.filter-title{
+    font-size:12px;
+    letter-spacing:1px;
+    opacity:.65;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.filter-card{
+    background:#1c1c1f;
+    border-radius:14px;
+    padding:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.filter-card button{
+    flex:1;
+}
+
+/* mobile grid for clean layout */
+@media (max-width:768px){
+
+    .filter-card{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+    }
+
+    .filter-card button{
+        width:100%;
+    }
+
+}
+
+/* smoother Apple-like press feedback */
+.filter-card button:active{
+    transform:scale(.96);
 }
 
 /* ================= ICON SYSTEM ================= */
@@ -770,8 +817,8 @@ body:not(.read-mode) .mode-icon.light {
     }
 
     .nav-title {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 20px;
+        font-weight: 800;
     }
 
     .title {
@@ -831,6 +878,13 @@ body:not(.read-mode) .mode-icon.light {
     mask-image: url("/static/icons/wrench.svg");
     -webkit-mask-image: url("/static/icons/wrench.svg");
 }
+
+
+.icon-piano {
+    mask-image: url("/static/icons/piano.svg");
+    -webkit-mask-image: url("/static/icons/piano.svg");
+}
+
 
 </style>
 </head>
