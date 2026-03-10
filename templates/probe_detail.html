@@ -270,7 +270,7 @@
         display:flex;
         align-items:center;
         gap:12px;
-        padding:16px;
+        padding:;
         font-weight:500;
         font-size:16px;
         color:#fff;
@@ -279,19 +279,12 @@
 >
 <span>Instrumental</span>
     <input
+        id="instrumental-check"
         type="checkbox"
         name="is_instrumental"
         value="1"
-        style="
-            width:22px;
-            height:22px;
-            margin:0;
-            flex-shrink:0;
-            accent-color:#00ffe1;
-        "
         {% if edit_song and edit_song.is_instrumental==1 %}checked{% endif %}
     >
-    
 </label>
 
  <label style="margin-bottom:12px; 
@@ -302,10 +295,11 @@
             font-size: 16px;">   
     Partiture (opcionalno)
 </label>
-<input type="file"
-       name="score_pdf"
-       accept="application/pdf"
-       style="margin-bottom:8px;">
+<div id="pdf-upload" style="margin-bottom:8px; display:none;">
+    <input type="file"
+           name="score_pdf"
+           accept="application/pdf">
+</div>
 
  <label style="margin-bottom:12px; 
             display:flex; 
@@ -349,6 +343,7 @@
 </form>
 </div>
 
+
 <script>
     function toggleAddSong() {
         const form = document.getElementById("add-song-form");
@@ -388,4 +383,54 @@
     }
     </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const checkbox = document.querySelector('input[name="is_instrumental"]');
+    const pdfBlock = document.getElementById("pdf-upload");
+
+    function togglePdf() {
+        if (checkbox && checkbox.checked) {
+            pdfBlock.style.display = "block";
+        } else {
+            pdfBlock.style.display = "none";
+        }
+    }
+
+    if (checkbox) {
+        checkbox.addEventListener("change", togglePdf);
+        togglePdf(); // ensure correct state on load
+    }
+
+});
+</script>
+
+<style>
+#instrumental-check{
+    appearance:none;
+    -webkit-appearance:none;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    border:2px solid #aaa;
+    background:#fff;
+    cursor:pointer;
+    position:relative;
+}
+
+#instrumental-check:checked{
+    background:#00ffe1;
+    border-color:#00ffe1;
+}
+
+#instrumental-check:checked::after{
+    content:"";
+    position:absolute;
+    top:5px;
+    left:5px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+}
+</style>
 {% endblock %}

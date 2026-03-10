@@ -37,7 +37,7 @@
  <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">   
     Podaci o pjesmi
 </h3>
-<form method="post">
+<form method="post" enctype="multipart/form-data">
 
 <!-- GRID -->
 <div style="
@@ -131,7 +131,6 @@
 <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:500; padding: 16px;color: #aaa; font-size: 16px;">   
     Mix
 </h3>
-<form method="post">
 
 <select name="planned_mix">
     <option value="">— bez mixa —</option>
@@ -154,14 +153,38 @@
        value="{{ song.mix_order if song.mix_order else '' }}"
        style="margin-top:8px;">
 
- <h3 style="margin-bottom:12px; display:flex; align-items:center; gap:10px;font-weight:600; padding: 16px;color: #fff; font-size: 16px;">   
-    Instrumental
-    <input type="checkbox"
+<label style="
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:500;
+    padding:;
+    color:#fff;
+    font-size:16px;
+">
+    <span>Instrumental</span>
+    <input id="instrumental-check"
+           type="checkbox"
            name="is_instrumental"
            value="1"
            {% if song.is_instrumental == 1 %}checked{% endif %}>
-   
-</h3>   
+</label>
+
+ <label style="margin-bottom:12px; 
+            display:flex; 
+            align-items:center; 
+            gap:10px;font-weight:500; 
+            padding: 16px;color: #aaa; 
+            font-size: 16px;">   
+    Partiture (opcionalno)
+</label>
+<div id="pdf-upload" style="margin-top:8px; display:none;">
+    <input type="file"
+           placeholder="PDF Partiture (opcionalno)"
+           name="score_pdf"
+           accept="application/pdf">
+</div>
 
 <textarea name="lyrics"
           placeholder="Lyrics (opcionalno)"
@@ -193,6 +216,58 @@
 </form>
 
 </div>
+
+
+<style>
+#instrumental-check{
+    appearance:none;
+    -webkit-appearance:none;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    border:2px solid #aaa;
+    background:#fff;
+    cursor:pointer;
+    position:relative;
+}
+
+#instrumental-check:checked{
+    background:#00ffe1;
+    border-color:#00ffe1;
+}
+
+#instrumental-check:checked::after{
+    content:"";
+    position:absolute;
+    top:5px;
+    left:5px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const checkbox = document.querySelector('input[name="is_instrumental"]');
+    const pdfBlock = document.getElementById("pdf-upload");
+
+    function togglePdf() {
+        if (checkbox && checkbox.checked) {
+            pdfBlock.style.display = "block";
+        } else {
+            pdfBlock.style.display = "none";
+        }
+    }
+
+    if (checkbox) {
+        checkbox.addEventListener("change", togglePdf);
+        togglePdf(); // initial state (important for edit view)
+    }
+
+});
+</script>
 
 {% endblock %}
 
