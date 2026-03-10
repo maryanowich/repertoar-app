@@ -634,6 +634,16 @@ def edit_song_repertoar(song_id):
             else:
                 mix_id = mix["id"]
 
+        # ---------- PDF UPLOAD (EDIT) ----------
+        pdf_file = request.files.get("score_pdf")
+        pdf_path = song["score_pdf"]
+
+        if pdf_file and pdf_file.filename:
+            filename = secure_filename(pdf_file.filename)
+            save_path = os.path.join("static", "scores", filename)
+            pdf_file.save(save_path)
+            pdf_path = f"scores/{filename}"
+
         db.execute("""
             UPDATE songs
             SET title=?,
@@ -648,7 +658,8 @@ def edit_song_repertoar(song_id):
                 lyrics=?,
                 is_instrumental=?,
                 mix_id=?,
-                mix_order=?
+                mix_order=?,
+                score_pdf=?
             WHERE id=?
         """, (
             request.form.get("title"),
@@ -664,6 +675,7 @@ def edit_song_repertoar(song_id):
             1 if request.form.get("is_instrumental") else 0,
             mix_id,
             int(mix_order) if mix_order else None,
+            pdf_path,
             song_id
         ))
 
