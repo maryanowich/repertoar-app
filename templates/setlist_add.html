@@ -3,32 +3,55 @@
 
 {% block content %}
 
+<script>
+/* ===== Preserve scroll when using filters ===== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* Save scroll position when any filter form is submitted */
+    document.querySelectorAll(".filter-section form").forEach(form => {
+        form.addEventListener("submit", () => {
+            sessionStorage.setItem("filterScrollY", window.scrollY);
+        });
+    });
+
+    /* Restore scroll position after page reload */
+    const y = sessionStorage.getItem("filterScrollY");
+    if (y !== null) {
+        window.scrollTo(0, parseInt(y));
+        sessionStorage.removeItem("filterScrollY");
+    }
+
+});
+</script>
+
 <!-- TOOLBAR -->
 <div style="
     position:sticky;
-    top:88px;
+    top: 88px;
     z-index:10;
-    padding:14px 16px;
     background:#161618;
-    border-bottom:1px solid #26262b;
+    padding:10px 16px;
+    border-bottom:1px solid #222;
 ">
 
 <form method="get"
-style="display:flex;align-items:flex-start;gap:10px;">
+style="display:flex;align-items:center;gap:10px;">
 
 <!-- LEFT SPACER (balans) -->
 <div style="width:48px;"></div>
+
 
 <!-- CENTER -->
 <div style="flex:1; display:flex; justify-content:center; gap:10px;">
     <input type="text" name="q"
       value="{{ filters.q or '' }}"
-      placeholder="🔍 Traži mix, pjesmu ili izvođača"
+      placeholder="🔍 Traži "
       style="
       max-width:420px;
       width:100%;
-      height:48px;
-      min-height:48px;
+      height:36px;
+      min-height:36px;
       box-sizing:border-box;
       border-radius:12px;
       background:#111;
@@ -46,7 +69,7 @@ style="display:flex;align-items:flex-start;gap:10px;">
   {% if filters_open %}
   <a href="{{ request.path }}"
    style="
-        height:48px;
+        height:36px;
         display:inline-flex;
         align-items:center;
         gap:8px;
@@ -67,7 +90,7 @@ style="display:flex;align-items:flex-start;gap:10px;">
   {% else %}
   <a href="{{ request.path }}?filters=1"
    style="
-        height:48px;
+        height:36px;
         display:inline-flex;
         align-items:center;
         gap:8px;
@@ -88,20 +111,17 @@ style="display:flex;align-items:flex-start;gap:10px;">
   {% endif %}
 </div>
 
-<!-- RIGHT -->
+<!-- RIGHT SPACER (balans) -->
 <div style="width:48px;"></div>
 
 </form>
+
 </div>
 
 
 <!-- FILTERI -->
-<div style="
-display:{{ 'block' if filters_open else 'none' }};
-background:#161618;
-padding:12px 16px 0 16px;
-border-bottom:1px solid #26262b;
-">
+<div style="display:{{ 'block' if filters_open else 'none' }};
+            background:#161618;padding:12px 16px 0 16px;border-bottom:1px solid #26262b;">
 
 <!-- ORIGIN -->
 <div class="filter-section">
@@ -117,10 +137,8 @@ border-bottom:1px solid #26262b;
 style="
 min-height:40px;
 padding:10px 16px;
-font-size:15px;
-font-weight:700;
-border-radius:14px;
-border:1px solid #8a7a00;
+font-size:15px;font-weight:700;
+border-radius:14px;border:1px solid #8a7a00;
 background:{% if filters.origin==o %}#ffd500{% else %}#161618{% endif %};
 color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
 ">
@@ -201,10 +219,8 @@ color:{% if filters.tempo==t %}#fff{% else %}#8aa4d6{% endif %};
 style="
 min-height:40px;
 padding:10px 16px;
-font-size:15px;
-font-weight:700;
-border-radius:14px;
-border:1px solid #fff;
+font-size:15px;font-weight:700;
+border-radius:14px;border:1px solid #fff;
 background:{% if filters.mix=="1" %}#fff{% else %}#161618{% endif %};
 color:{% if filters.mix=="1" %}#000{% else %}#fff{% endif %};
 ">
@@ -221,10 +237,8 @@ MIX
 style="
 min-height:40px;
 padding:10px 16px;
-font-size:15px;
-font-weight:700;
-border-radius:14px;
-border:1px solid #00ffe1;
+font-size:15px;font-weight:700;
+border-radius:14px;border:1px solid #00ffe1;
 background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#161618{% endif %};
 color:{% if filters.instrumental=="1" %}#000{% else %}#00ffe1{% endif %};
 display:flex;
@@ -235,7 +249,6 @@ gap:6px;
 <span class="icon icon-piano"></span> INSTR
 </button>
 </form>
-
 </div>
 </div>
 
@@ -294,7 +307,6 @@ color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
 {% endfor %}
 </div>
 </div>
-
 </div>
 
 

@@ -167,6 +167,7 @@
      ">
 
 <form method="post"
+      enctype="multipart/form-data"
       action="{% if edit_song %}
                 /song/{{ edit_song.id }}/edit
               {% else %}
@@ -301,8 +302,10 @@
             font-size: 16px;">   
     Partiture (opcionalno)
 </label>
-<input name="score_pdf" placeholder="PDF partiture (opcionalno)"
-       value="{{ edit_song.score_pdf if edit_song else '' }}">
+<input type="file"
+       name="score_pdf"
+       accept="application/pdf"
+       style="margin-bottom:8px;">
 
  <label style="margin-bottom:12px; 
             display:flex; 
@@ -336,7 +339,7 @@
             <span class="icon icon-save" style="width:16px;height:16px;background-color:currentColor;"></span>
             Spremi
         {% else %}
-            <span class="icon icon-plus" style="width:16px;height:16px;background-color:currentColor;"></span>
+            <span class="icon icon-create" style="width:16px;height:16px;background-color:currentColor;"></span>
             Dodaj
         {% endif %}
     </span>

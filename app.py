@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, abort, redirect, session, jsonify
+from werkzeug.utils import secure_filename
 import psycopg2
 import psycopg2.extras
 import os
@@ -330,6 +331,14 @@ def api_song_stats():
         """
     ).fetchone()
 
+    duet_stats = db.execute(
+        """
+        SELECT COUNT(*) AS total_duet
+        FROM songs
+        WHERE status='repertoar' AND vocal = 'Duet'
+        """
+    ).fetchone()
+
     # genre statistics (from view)
     genres = db.execute(
         "SELECT genre, genre_count AS count FROM v_brojzanr ORDER BY genre_count DESC"
@@ -355,6 +364,7 @@ def api_song_stats():
         "total_strano": stats["total_strano"],
         "total_musko": stats["total_musko"],
         "total_zensko": stats["total_zensko"],
+        "total_duet": duet_stats["total_duet"],
         "total_instrumental": stats["total_instrumental"],
         "total_mixes": mix_count,
         "total_setlists": setlist_count,
@@ -532,13 +542,23 @@ def song_add():
             else:
                 mix_id = mix["id"]
 
+        # ---------- PDF UPLOAD ----------
+        pdf_file = request.files.get("score_pdf")
+        pdf_path = None
+
+        if pdf_file and pdf_file.filename:
+            filename = secure_filename(pdf_file.filename)
+            save_path = os.path.join("static", "scores", filename)
+            pdf_file.save(save_path)
+            pdf_path = f"scores/{filename}"
+
         db.execute("""
             INSERT INTO songs (
                 title, artist, key, tempo, genre, region, vocal,
                 origin, theme, lyrics, is_instrumental,
-                mix_id, mix_order, status
+                mix_id, mix_order, score_pdf, status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'repertoar')
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'repertoar')
         """, (
             request.form.get("title"),
             request.form.get("artist"),
@@ -552,7 +572,8 @@ def song_add():
             request.form.get("lyrics"),
             1 if request.form.get("is_instrumental") else 0,
             mix_id,
-            int(mix_order) if mix_order else None
+            int(mix_order) if mix_order else None,
+            pdf_path
         ))
 
         db.commit()

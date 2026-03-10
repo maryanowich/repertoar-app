@@ -3,6 +3,28 @@
 
 {% block content %}
 
+<script>
+/* ===== Preserve scroll when using filters ===== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* Save scroll position when any filter form is submitted */
+    document.querySelectorAll(".filter-section form").forEach(form => {
+        form.addEventListener("submit", () => {
+            sessionStorage.setItem("filterScrollY", window.scrollY);
+        });
+    });
+
+    /* Restore scroll position after page reload */
+    const y = sessionStorage.getItem("filterScrollY");
+    if (y !== null) {
+        window.scrollTo(0, parseInt(y));
+        sessionStorage.removeItem("filterScrollY");
+    }
+
+});
+</script>
+
 {% block floating_controls %}
 <a href="/mix/new"
    style="

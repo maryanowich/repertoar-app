@@ -39,7 +39,7 @@
     Podaci o pjesmi
 </h3>
 
-<form method="post" action="/song/add">
+<form method="post" action="/song/add" enctype="multipart/form-data">
 
 <div style="
     display:grid;
@@ -140,7 +140,10 @@ Planirani mix
            style="display:flex;">
 </h3>
 
-<input name="score_pdf" placeholder="PDF partiture (opcionalno)">
+<input type="file"
+       name="score_pdf"
+       accept="application/pdf"
+       style="margin-top:8px;">
 <textarea name="lyrics" placeholder="Lyrics (opcionalno)"></textarea>
 
 <div style="display:flex;justify-content:center;margin-top:20px;">
