@@ -224,6 +224,8 @@ Planirani mix
 document.addEventListener("DOMContentLoaded", function () {
     const checkbox = document.querySelector('input[name="is_instrumental"]');
     const pdfBlock = document.getElementById("pdf-upload");
+    const originSelect = document.querySelector('select[name="origin"]');
+    const regionSelect = document.querySelector('select[name="region"]');
 
     function togglePdf() {
         if (checkbox.checked) {
@@ -233,9 +235,23 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function updateRegionRequirement(){
+        if(originSelect.value === "Strano"){
+            regionSelect.required = false;
+            regionSelect.disabled = true;
+            regionSelect.value = "";
+        } else {
+            regionSelect.disabled = false;
+            regionSelect.required = true;
+        }
+    }
+
     checkbox.addEventListener("change", togglePdf);
+    originSelect.addEventListener("change", updateRegionRequirement);
     togglePdf(); // initial state
+    updateRegionRequirement(); // initial state
 });
 </script>
+
 
 {% endblock %}

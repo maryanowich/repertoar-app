@@ -101,6 +101,17 @@
         <!-- ACTIONS -->
 <div style="display:flex;gap:6px;align-items:center;">
 
+    {% if song.version_link %}
+        <!-- YOUTUBE LINK -->
+        <a href="{{ song.version_link }}"
+           target="_blank"
+           onclick="event.stopPropagation();"
+           class="action-btn"
+           title="Verzija pjesme (YouTube)">
+            <span class="icon icon-youtube"></span>
+        </a>
+    {% endif %}
+
     {% if song.status != 'repertoar' %}
         <!-- PUSH TO REPERTOAR (OPASNO, NE MIJENJATI LOGIKU) -->
         <form method="post"
@@ -307,6 +318,20 @@
             gap:10px;font-weight:500; 
             padding: 16px;color: #aaa; 
             font-size: 16px;">   
+    Link za verziju (YouTube)
+</label>
+
+<input name="youtube_link"
+       type="url"
+       placeholder="https://youtube.com/... (opcionalno)"
+       value="{{ edit_song.youtube_link if edit_song and edit_song.youtube_link else '' }}">
+
+<label style="margin-bottom:12px; 
+            display:flex; 
+            align-items:center; 
+            gap:10px;font-weight:500; 
+            padding: 16px;color: #aaa; 
+            font-size: 16px;">   
     Tekst
 </label>
 <textarea name="lyrics"
@@ -388,6 +413,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const checkbox = document.querySelector('input[name="is_instrumental"]');
     const pdfBlock = document.getElementById("pdf-upload");
+    const originSelect = document.querySelector('select[name="origin"]');
+    const regionSelect = document.querySelector('select[name="region"]');
 
     function togglePdf() {
         if (checkbox && checkbox.checked) {
@@ -396,10 +423,28 @@ document.addEventListener("DOMContentLoaded", function () {
             pdfBlock.style.display = "none";
         }
     }
+    function updateRegionRequirement(){
+        if(originSelect && regionSelect){
+            if(originSelect.value === "Strano"){
+                regionSelect.required = false;
+                regionSelect.disabled = true;
+                regionSelect.value = "";
+            } else {
+                regionSelect.disabled = false;
+                regionSelect.required = true;
+            }
+        }
+    }
 
     if (checkbox) {
         checkbox.addEventListener("change", togglePdf);
+
+        if(originSelect){
+            originSelect.addEventListener("change", updateRegionRequirement);
+        }
+
         togglePdf(); // ensure correct state on load
+        updateRegionRequirement(); // ensure correct state on load
     }
 
 });

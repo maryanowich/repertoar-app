@@ -159,7 +159,7 @@
     align-items:center;
     gap:10px;
     font-weight:500;
-    padding:12px;
+    padding:16px;
     color:#fff;
     font-size:16px;
 ">
@@ -252,6 +252,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const checkbox = document.querySelector('input[name="is_instrumental"]');
     const pdfBlock = document.getElementById("pdf-upload");
+    const originSelect = document.querySelector('select[name="origin"]');
+    const regionSelect = document.querySelector('select[name="region"]');
 
     function togglePdf() {
         if (checkbox && checkbox.checked) {
@@ -261,13 +263,29 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function updateRegionRequirement(){
+        if(originSelect && regionSelect){
+            if(originSelect.value === "Strano"){
+                regionSelect.required = false;
+                regionSelect.disabled = true;
+                regionSelect.value = "";
+            } else {
+                regionSelect.disabled = false;
+                regionSelect.required = true;
+            }
+        }
+    }
+
     if (checkbox) {
         checkbox.addEventListener("change", togglePdf);
+        if(originSelect){
+            originSelect.addEventListener("change", updateRegionRequirement);
+        }
         togglePdf(); // initial state (important for edit view)
+        updateRegionRequirement(); // initial state
     }
 
 });
 </script>
 
 {% endblock %}
-

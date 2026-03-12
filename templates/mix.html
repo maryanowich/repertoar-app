@@ -52,8 +52,22 @@
         {% for song in songs %}
         <div style="padding:40px 10px;">
 
-            <div style="font-size:28px;font-weight:700;text-align:center;margin-bottom:6px;">
-                {{ song.mix_order }}. {{ song.title }}
+            <div style="font-size:28px;font-weight:700;text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:10px;">
+                <span>{{ song.mix_order }}. {{ song.title }}</span>
+
+                {% if song.is_new %}
+                <span style="
+                    background:#ffd500;
+                    color:#000;
+                    font-weight:700;
+                    font-size:11px;
+                    padding:2px 8px;
+                    border-radius:8px;
+                    letter-spacing:0.5px;
+                ">
+                    NOVO
+                </span>
+                {% endif %}
             </div>
 
             <div style="font-size:16px;color:#aaa;text-align:center;margin-bottom:22px;">

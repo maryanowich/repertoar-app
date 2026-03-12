@@ -339,7 +339,21 @@ color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
        style="flex:1;text-decoration:none;color:inherit;">
        <div class="title" style="display:flex;align-items:center;gap:8px;">
         <span class="icon icon-note"></span>
-        {{ song.title }}
+        <span>{{ song.title }}</span>
+
+        {% if song.is_new %}
+        <span style="
+            background:#ffd500;
+            color:#000;
+            font-weight:700;
+            font-size:11px;
+            padding:2px 8px;
+            border-radius:8px;
+            letter-spacing:0.5px;
+        ">
+            NOVO
+        </span>
+        {% endif %}
     </div>
     
         <div class="meta">{{ song.artist }} • Tonalitet: <strong>{{ song.key }}</strong></div>

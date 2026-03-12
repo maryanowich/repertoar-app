@@ -885,6 +885,12 @@ body:not(.read-mode) .mode-icon.light {
     -webkit-mask-image: url("/static/icons/piano.svg");
 }
 
+.icon-youtube {
+    mask-image: url("/static/icons/youtube.svg");
+    -webkit-mask-image: url("/static/icons/youtube.svg");
+    color: #ff0000;
+}
+
 
 </style>
 </head>
@@ -893,7 +899,10 @@ body:not(.read-mode) .mode-icon.light {
 
 <div class="nav">
     {% if nav and nav.show_back %}
-        <a href="{{ nav.back_url }}">←</a>
+        <a href="{{ nav.back_url or '#' }}"
+           onclick="if(this.getAttribute('href')=='#'){history.back(); return false;}">
+           ←
+        </a>
     {% else %}
         <div class="nav-placeholder"></div>
     {% endif %}

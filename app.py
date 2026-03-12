@@ -391,7 +391,17 @@ def repertoar():
     }
 
     query = """
-        SELECT songs.*, mixes.name AS mix_name
+        SELECT
+            songs.*,
+            mixes.name AS mix_name,
+
+            CASE
+                WHEN songs.created_at IS NOT NULL
+                 AND EXTRACT(EPOCH FROM (NOW() - CAST(songs.created_at AS timestamptz))) < 86400
+                THEN 1
+                ELSE 0
+            END AS is_new
+
         FROM songs
         LEFT JOIN mixes ON songs.mix_id = mixes.id
         WHERE songs.status = 'repertoar'
@@ -417,7 +427,7 @@ def repertoar():
         query += " AND songs.is_instrumental = 1"
 
     if filters["q"]:
-        query += " AND (songs.title LIKE ? OR songs.artist LIKE ?)"
+        query += " AND (songs.title ILIKE ? OR songs.artist ILIKE ?)"
         params += [f"%{filters['q']}%"] * 2
 
     query += " ORDER BY LOWER(songs.title)"
@@ -699,6 +709,32 @@ def edit_song_repertoar(song_id):
 )
 
 
+# ---------- DELETE SONG (REPERTOAR) ----------
+@app.route("/repertoar/<int:song_id>/delete", methods=["POST", "GET"])
+def delete_song_repertoar(song_id):
+    db = get_db()
+    require_admin()
+
+    song = db.execute(
+        "SELECT id FROM songs WHERE id = ? AND status = 'repertoar'",
+        (song_id,)
+    ).fetchone()
+
+    if not song:
+        abort(404)
+
+    # remove possible relations first
+    db.execute("DELETE FROM rehearsal_songs WHERE song_id = ?", (song_id,))
+    db.execute("DELETE FROM setlist_items WHERE item_type='song' AND item_id = ?", (song_id,))
+
+    # remove the song itself
+    db.execute("DELETE FROM songs WHERE id = ?", (song_id,))
+
+    db.commit()
+
+    return redirect("/repertoar")
+
+
 # ---------- EDIT SONG (FROM PROBE) ----------
 @app.route("/song/<int:song_id>/edit", methods=["GET", "POST"])
 def edit_song(song_id):
@@ -878,14 +914,14 @@ def mixes():
     if filters["q"]:
         query += """
             AND (
-                m.name LIKE ?
+                m.name ILIKE ?
                 OR EXISTS (
                     SELECT 1
                     FROM songs s
                     WHERE s.mix_id = m.id
                       AND (
-                          s.title LIKE ?
-                          OR s.artist LIKE ?
+                          s.title ILIKE ?
+                          OR s.artist ILIKE ?
                       )
                 )
             )
@@ -1083,8 +1119,8 @@ def mix_add(mix_id):
     if filters["q"]:
         query += """
             AND (
-                title LIKE ?
-                OR artist LIKE ?
+                title ILIKE ?
+                OR artist ILIKE ?
             )
         """
         params += [f"%{filters['q']}%"] * 2
@@ -1376,7 +1412,7 @@ def probe_detail(rehearsal_id):
         abort(404)
 
     songs = db.execute("""
-        SELECT s.*
+        SELECT s.*, rs.version_link
         FROM songs s
         JOIN rehearsal_songs rs ON rs.song_id = s.id
         WHERE rs.rehearsal_id = ?
@@ -1457,10 +1493,13 @@ def add_song_to_probe(rehearsal_id):
     else:
         song_id = song["id"]
 
+    version_link = request.form.get("youtube_link")
+
     db.execute("""
-        INSERT INTO rehearsal_songs (rehearsal_id, song_id)
-        VALUES (?, ?) ON CONFLICT DO NOTHING
-    """, (rehearsal_id, song_id))
+        INSERT INTO rehearsal_songs (rehearsal_id, song_id, version_link)
+        VALUES (?, ?, ?)
+        ON CONFLICT DO NOTHING
+    """, (rehearsal_id, song_id, version_link))
 
     db.commit()
     return redirect(f"/probe/{rehearsal_id}")
@@ -1967,11 +2006,13 @@ def setlist_add_item(setlist_id):
     item_id = request.form.get("item_id")
 
     # sljedeća pozicija
-    last = db.execute("""
-        SELECT MAX(position) FROM setlist_items
+    row = db.execute("""
+        SELECT MAX(position) AS max_pos
+        FROM setlist_items
         WHERE setlist_id=?
-    """, (setlist_id,)).fetchone()[0]
+    """, (setlist_id,)).fetchone()
 
+    last = row["max_pos"]
     next_position = (last or 0) + 1
 
     db.execute("""
@@ -1991,19 +2032,28 @@ def setlist_add_item(setlist_id):
 def setlist_reorder(setlist_id):
     db = get_db()
 
-    order = request.json  # <-- OVDJE JE BITNA PROMJENA
+    data = request.get_json()
+
+    if not data:
+        abort(400)
+
+    # frontend može poslati ili listu ili objekt {order:[...]}
+    if isinstance(data, dict):
+        order = data.get("order")
+    else:
+        order = data
 
     if not order:
         abort(400)
 
-    for item in order:
+    for index, item_id in enumerate(order, start=1):
         db.execute("""
             UPDATE setlist_items
             SET position=?
             WHERE id=? AND setlist_id=?
         """, (
-            item["position"],
-            item["id"],
+            index,
+            int(item_id),
             setlist_id
         ))
 
