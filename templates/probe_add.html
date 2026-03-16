@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% block title %}Dodaj na probu{% endblock %}
+
+{% block content %}
+
+<script>
+/* ===== Preserve scroll when using filters ===== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".filter-section form").forEach(form => {
+        form.addEventListener("submit", () => {
+            sessionStorage.setItem("filterScrollY", window.scrollY);
+        });
+    });
+
+    const y = sessionStorage.getItem("filterScrollY");
+    if (y !== null) {
+        window.scrollTo(0, parseInt(y));
+        sessionStorage.removeItem("filterScrollY");
+    }
+
+});
+</script>
+
+
+<!-- TOOLBAR -->
+<div style="
+position:sticky;
+top:88px;
+z-index:10;
+background:#161618;
+padding:10px 16px;
+border-bottom:1px solid #222;
+">
+
+<form method="get" style="display:flex;align-items:center;gap:10px;">
+
+<div style="width:48px;"></div>
+
+<div style="flex:1;display:flex;justify-content:center;gap:10px;">
+
+<input type="text"
+name="q"
+value="{{ filters.q or '' }}"
+placeholder="🔍 Traži"
+style="
+max-width:420px;
+width:100%;
+height:36px;
+min-height:36px;
+box-sizing:border-box;
+border-radius:12px;
+background:#111;
+border:1px solid #333;
+color:#fff;
+font-size:16px;
+padding:0 16px;
+display:flex;
+align-items:center;
+vertical-align:middle;
+">
+
+{% if filters_open %}
+
+<a href="{{ request.path }}"
+style="
+height:36px;
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:0 16px;
+background:#fff;
+color:#000;
+border-radius:12px;
+font-weight:600;
+text-decoration:none;
+">
+<span class="icon icon-close"></span>
+Zatvori
+</a>
+
+{% else %}
+
+<a href="{{ request.path }}?filters=1"
+style="
+height:36px;
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:0 16px;
+background:#111;
+border:1px solid #333;
+color:#fff;
+border-radius:12px;
+font-weight:600;
+text-decoration:none;
+">
+<span class="icon icon-filter"></span>
+Filtriraj
+</a>
+
+{% endif %}
+
+</div>
+
+<div style="width:48px;"></div>
+
+</form>
+
+</div>
+
+
+<!-- FILTERI -->
+<div style="
+display:{{ 'block' if filters_open else 'none' }};
+background:#161618;
+padding:12px 16px 0 16px;
+border-bottom:1px solid #26262b;
+">
+
+<!-- ORIGIN -->
+<div class="filter-section">
+<div class="filter-title">Porijeklo</div>
+<div class="filter-card">
+
+{% for o in ["Domaće","Strano"] %}
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='origin' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.origin!=o %}name="origin" value="{{o}}"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #8a7a00;
+background:{% if filters.origin==o %}#ffd500{% else %}#161618{% endif %};
+color:{% if filters.origin==o %}#000{% else %}#ffe680{% endif %};
+">
+{{ o }}
+</button>
+
+</form>
+
+{% endfor %}
+
+</div>
+</div>
+
+
+<!-- VOCAL -->
+<div class="filter-section">
+<div class="filter-title">Vokal</div>
+<div class="filter-card">
+
+{% for v in ["Muško","Žensko","Duet"] %}
+
+<form method="get">
+
+{% for k,vv in filters.items() if k!='vocal' and vv %}
+<input type="hidden" name="{{k}}" value="{{vv}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.vocal!=v %}name="vocal" value="{{v}}"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #6b21a8;
+background:{% if filters.vocal==v %}#a855f7{% else %}#161618{% endif %};
+color:{% if filters.vocal==v %}#000{% else %}#d8b4fe{% endif %};
+">
+{{ v }}
+</button>
+
+</form>
+
+{% endfor %}
+
+</div>
+</div>
+
+
+<!-- TEMPO -->
+<div class="filter-section">
+<div class="filter-title">Tempo</div>
+<div class="filter-card">
+
+{% for t in ["Spora","Srednja","Brza"] %}
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='tempo' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.tempo!=t %}name="tempo" value="{{t}}"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #2a3b55;
+background:{% if filters.tempo==t %}#2a6cff{% else %}#161618{% endif %};
+color:{% if filters.tempo==t %}#fff{% else %}#8aa4d6{% endif %};
+">
+{{ t }}
+</button>
+
+</form>
+
+{% endfor %}
+
+</div>
+</div>
+
+
+<!-- TIP -->
+<div class="filter-section">
+<div class="filter-title">Tip</div>
+<div class="filter-card">
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='mix' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.mix!="1" %}name="mix" value="1"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #fff;
+background:{% if filters.mix=="1" %}#fff{% else %}#161618{% endif %};
+color:{% if filters.mix=="1" %}#000{% else %}#fff{% endif %};
+">
+MIX
+</button>
+
+</form>
+
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='instrumental' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.instrumental!="1" %}name="instrumental" value="1"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:700;
+border-radius:14px;
+border:1px solid #00ffe1;
+background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#161618{% endif %};
+color:{% if filters.instrumental=="1" %}#000{% else %}#00ffe1{% endif %};
+display:flex;
+align-items:center;
+justify-content:center;
+gap:6px;
+">
+<span class="icon icon-piano"></span> INSTR
+</button>
+
+</form>
+
+</div>
+</div>
+
+
+<!-- GENRE -->
+<div class="filter-section">
+<div class="filter-title">Žanr</div>
+<div class="filter-card">
+
+{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='genre' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.genre!=g %}name="genre" value="{{g}}"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:600;
+border-radius:16px;
+border:1px solid #5a2a2a;
+background:{% if filters.genre==g %}#ff5a5a{% else %}#161618{% endif %};
+color:{% if filters.genre==g %}#fff{% else %}#ff9a9a{% endif %};
+">
+{{ g }}
+</button>
+
+</form>
+
+{% endfor %}
+
+</div>
+</div>
+
+
+<!-- REGIJA -->
+<div class="filter-section">
+<div class="filter-title">Regija</div>
+<div class="filter-card">
+
+{% for r in ["Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BIH"] %}
+
+<form method="get">
+
+{% for k,v in filters.items() if k!='regija' and v %}
+<input type="hidden" name="{{k}}" value="{{v}}">
+{% endfor %}
+
+<input type="hidden" name="filters" value="1">
+
+<button
+{% if filters.regija!=r %}name="regija" value="{{r}}"{% endif %}
+style="
+min-height:40px;
+padding:10px 16px;
+font-size:15px;
+font-weight:600;
+border-radius:16px;
+border:1px solid #2a5a3a;
+background:{% if filters.regija==r %}#2ecc71{% else %}#161618{% endif %};
+color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
+">
+{{ r }}
+</button>
+
+</form>
+
+{% endfor %}
+
+</div>
+</div>
+</div>
+
+<!-- SONGS -->
+<div class="list" style="padding-top: {{ '20px' if not filters_open else '0' }};">
+
+{% if filters.mix != "1" %}
+{% for s in songs %}
+
+<div class="song-row"
+style="display:flex;justify-content:space-between;align-items:center;">
+
+<div style="flex:1;">
+<div class="title" style="display:flex;align-items:center;gap:8px;">
+<span class="icon icon-note"></span>
+{{ s.title }}
+</div>
+
+<div class="meta">
+{{ s.artist }} • Tonalitet: <strong>{{ s.key }}</strong>
+</div>
+</div>
+
+<form method="post" action="/probe/{{ rehearsal.id }}/add_item">
+
+<input type="hidden" name="item_type" value="song">
+<input type="hidden" name="item_id" value="{{ s.id }}">
+
+<button
+type="submit"
+class="action-btn add"
+onclick="event.stopPropagation();">
+
+<span class="icon icon-plus"></span>
+
+</button>
+
+</form>
+
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- MIXES -->
+{% for m in mixes %}
+
+<div class="song-row"
+style="display:flex;justify-content:space-between;align-items:center;">
+
+<div style="flex:1;">
+
+<div class="title" style="display:flex;align-items:center;gap:8px;">
+<span class="icon icon-mix"></span>
+{{ m.name }}
+</div>
+
+<div class="meta">
+Tonalitet: {{ m.mix_key or '-' }} <br>
+{{ m.song_titles or 'Nema pjesama u miksu' }}
+</div>
+
+</div>
+
+<form method="post" action="/probe/{{ rehearsal.id }}/add_item">
+
+<input type="hidden" name="item_type" value="mix">
+<input type="hidden" name="item_id" value="{{ m.id }}">
+
+<button
+type="submit"
+class="action-btn add"
+onclick="event.stopPropagation();">
+
+<span class="icon icon-plus"></span>
+
+</button>
+
+</form>
+
+</div>
+
+{% endfor %}
+
+
+{% if songs|length == 0 and mixes|length == 0 %}
+
+<div style="padding:24px;text-align:center;color:#777;">
+Nema rezultata.
+</div>
+
+{% endif %}
+
+</div>
+
+{% endblock %}

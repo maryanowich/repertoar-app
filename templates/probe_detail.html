@@ -34,59 +34,126 @@
 </div>
 
 <!-- TOGGLE ADD / EDIT SONG BUTTON -->
+<div style="position:fixed;top:30px;right:16px;z-index:1000;">
 <button id="toggle-add-btn"
-    onclick="toggleAddSong()"
+    onclick="toggleAddMenu()"
     style="
-        position:fixed;
-        top:30px;
-        right:16px;
         width:36px;
         height:36px;
         display:flex;
         align-items:center;
         justify-content:center;
         color:#aaa;
-        text-decoration:none;
         background:none;
         border:none;
-        z-index:1000;
-
-        border:0;
-        outline:none;
-        box-shadow:none;
-        appearance:none;
-        -webkit-appearance:none;
         cursor:pointer;
     ">
-<span style="display:inline-flex;align-items:center;gap:8px;">
-    {% if edit_song %}
-        <span class="icon icon-close" style="color:#ffff;"></span>
-        
-    {% else %}
-        <span class="icon icon-plus"></span>
-        
-    {% endif %}
-</span>
+    <span class="icon icon-plus"></span>
 </button>
+
+<div id="add-menu"
+     style="
+        display:none;
+        position:absolute;
+        right:0;
+        top:40px;
+        background:#1f1f23;
+        border:1px solid #2a2a30;
+        border-radius:10px;
+        overflow:hidden;
+        min-width:160px;
+        box-shadow:0 8px 20px rgba(0,0,0,.4);
+     ">
+
+    <div onclick="openNewSong()"
+         style="padding:10px 14px;cursor:pointer;color:#fff;">
+        Nova pjesma
+    </div>
+
+    <div onclick="openLibrary()"
+         style="padding:10px 14px;border-top:1px solid #2a2a30;cursor:pointer;color:#fff;">
+        Iz biblioteke
+    </div>
+
+</div>
+</div>
 
 <!-- PJESME NA PROBI -->
 <div class="list">
 
+{% set ns = namespace(last_mix=None) %}
 {% for song in songs %}
-    <div class="song-row"
-         onclick="window.location.href='{% if song.mix_id %}/mix/{{ song.mix_id }}?from={{ request.path }}{% else %}/song/{{ song.id }}?from={{ request.path }}{% endif %}'"
-         style="gap:10px;cursor:pointer;">
 
+    {% if song.mix_name %}
+
+        {% if song.mix_id != ns.last_mix %}
+
+    <div class="song-row"
+         onclick="window.location.href='/mix/{{ song.mix_id }}?from={{ request.path }}'"
+         style="cursor:pointer;">
+
+        <div class="song-main" style="flex:1;">
+
+            <div class="title" style="display:flex;align-items:center;gap:8px;">
+                <span class="icon icon-mix"></span>
+                {{ song.mix_name or song.planned_mix or 'Mix' }}
+            </div>
+
+            <div class="meta">
+                Tonalitet: <strong>{{ song.mix_key or '-' }}</strong>
+
+                {% if song.song_titles %}
+                    <br>
+                    {{ song.song_titles }}
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div style="display:flex;gap:6px;align-items:center;">
+
+            <!-- EDIT MIX -->
+            <a href="/mix/{{ song.mix_id }}/edit"
+               onclick="event.stopPropagation();"
+               class="action-btn edit"
+               title="Uredi mix">
+                <span class="icon icon-edit"></span>
+            </a>
+
+            <!-- DELETE MIX FROM PROBE -->
+            <form method="post"
+                  action="/probe/{{ rehearsal.id }}/remove_mix/{{ song.mix_id }}"
+                  onsubmit="event.stopPropagation(); return confirm('Ukloniti cijeli mix s probe?');">
+
+                <button class="action-btn delete"
+                        onclick="event.stopPropagation();"
+                        title="Ukloni mix s probe">
+                    <span class="icon icon-delete"></span>
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+            {% set ns.last_mix = song.mix_id %}
+        {% endif %}
+
+    {% else %}
+
+        <div class="song-row" style="cursor:pointer;">
         <!-- SONG INFO -->
         <div class="song-main" style="flex:1;">
             <div class="title" style="display:flex;align-items:center;gap:8px;">
                 <span class="icon icon-repertoar"></span>
-                {{ song.title }}
+                {{ song.song_title }}
             </div>
         
             <div class="meta">
-                {{ song.artist }}
-                • Tonalitet: <strong>{{ song.key }}</strong>
+                {{ song.song_artist }}
+                • Tonalitet: <strong>{{ song.key or '-' }}</strong>
         
                 {% if song.planned_mix %}
                     <span style="display:inline-flex;align-items:center;gap:6px;margin-left:6px;">
@@ -134,7 +201,7 @@
     {% endif %}
 
     <!-- EDIT -->
-    <a href="/song/{{ song.id }}/edit"
+    <a href="/repertoar/{{ song.song_id }}/edit"
        onclick="event.stopPropagation();"
        class="action-btn edit"
        title="Uredi pjesmu" >
@@ -143,10 +210,11 @@
 
     <!-- DELETE FROM PROBE -->
     <form method="post"
-          action="/probe/{{ rehearsal.id }}/remove/{{ song.id }}"
+          action="/probe/{{ rehearsal.id }}/remove/{{ song.song_id }}"
           onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni da želite ukloniti ovu pjesmu s probe?');">
 
         <button class="action-btn delete"
+                onclick="event.stopPropagation();"
                 title="Ukloni s probe">
             <span class="icon icon-delete"></span>
         </button>
@@ -155,7 +223,8 @@
 
 </div>
 
-    </div>
+</div>
+    {% endif %}
 {% endfor %}
 
 {% if songs|length == 0 and not edit_song %}
@@ -370,6 +439,20 @@
 
 
 <script>
+function toggleAddMenu(){
+    const menu = document.getElementById("add-menu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+function openNewSong(){
+    document.getElementById("add-menu").style.display="none";
+    toggleAddSong();
+}
+
+function openLibrary(){
+    window.location.href="/probe/{{ rehearsal.id }}/add";
+}
+
     function toggleAddSong() {
         const form = document.getElementById("add-song-form");
         const btn = document.getElementById("toggle-add-btn");

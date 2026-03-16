@@ -220,6 +220,10 @@ def set_auto_lock(mode):
     return ("", 204)
 
 def nav_ctx(title=None, back_url=None, mode="library", show_back=True, show_settings=True):
+    # if back_url is not explicitly provided, fall back to referrer
+    if not back_url:
+        back_url = request.referrer or "/"
+
     return {
         "title": title,
         "back_url": back_url,
@@ -479,7 +483,8 @@ def song_detail(song_id):
         back_url = from_param
 
     else:
-        back_url = "/repertoar"
+        # fallback to real previous page if available
+        back_url = request.referrer or "/repertoar"
 
     # -------------------------------------------------
     # 🔥 SWIPE SUPPORT (DODANO)
@@ -753,8 +758,8 @@ def edit_song(song_id):
         LIMIT 1
     """, (song_id,)).fetchone()
 
-    if not rehearsal:
-        abort(400)
+    # determine where user came from
+    back_url = request.args.get("from") or request.referrer or "/repertoar"
 
     if request.method == "POST":
         db.execute("""
@@ -792,33 +797,51 @@ def edit_song(song_id):
         ))
 
         db.commit()
-        return redirect(f"/probe/{rehearsal['id']}")
+        if rehearsal:
+            return redirect(f"/probe/{rehearsal['id']}")
+        return redirect(back_url)
 
-    songs = db.execute("""
-        SELECT s.*
-        FROM songs s
-        JOIN rehearsal_songs rs ON rs.song_id = s.id
-        WHERE rs.rehearsal_id = ?
-        ORDER BY s.title
-    """, (rehearsal["id"],)).fetchall()
+    songs = []
+    if rehearsal:
+        songs = db.execute("""
+            SELECT s.*
+            FROM songs s
+            JOIN rehearsal_songs rs ON rs.song_id = s.id
+            WHERE rs.rehearsal_id = ?
+            ORDER BY s.title
+        """, (rehearsal["id"],)).fetchall()
 
     mixes = db.execute("SELECT name FROM mixes ORDER BY name").fetchall()
     artists = db.execute("SELECT DISTINCT artist FROM songs ORDER BY artist").fetchall()
 
+    if rehearsal:
+        return render_template(
+            "probe_detail.html",
+            rehearsal=rehearsal,
+            songs=songs,
+            mixes=mixes,
+            artists=artists,
+            edit_song=song,
+            nav=nav_ctx(
+                title="Uredi pjesmu",
+                back_url=f"/probe/{rehearsal['id']}",
+                mode="library",
+                show_back=True
+            )
+        )
+
     return render_template(
-    "probe_detail.html",
-    rehearsal=rehearsal,
-    songs=songs,
-    mixes=mixes,
-    artists=artists,
-    edit_song=song,
-    nav=nav_ctx(
-        title="Uredi pjesmu",
-        back_url=f"/probe/{rehearsal['id']}",
-        mode="rehearsal",
-        show_back=True
+        "song_edit.html",
+        song=song,
+        mixes=mixes,
+        artists=artists,
+        nav=nav_ctx(
+            title="Uredi pjesmu",
+            back_url=back_url,
+            mode="library",
+            show_back=True
+        )
     )
-)
 
 # ---------- MIXES ----------
 @app.route("/mixes")
@@ -1021,6 +1044,8 @@ def mix_edit(mix_id):
             title,
             artist,
             key,
+            lyrics,
+            mix_lyrics,
             mix_order
         FROM songs
         WHERE mix_id = ?
@@ -1152,15 +1177,20 @@ def mix_add_song(mix_id):
         abort(400)
 
     # zadnji redni broj u mixu
-    last_pos = db.execute(
-        "SELECT COALESCE(MAX(mix_order), 0) FROM songs WHERE mix_id = ?",
+    row = db.execute(
+        "SELECT COALESCE(MAX(mix_order), 0) AS max_pos FROM songs WHERE mix_id = ?",
         (mix_id,)
-    ).fetchone()[0]
+    ).fetchone()
+
+    last_pos = row["max_pos"]
 
     db.execute(
         """
         UPDATE songs
-        SET mix_id = ?, mix_order = ?
+        SET
+            mix_id = ?,
+            mix_order = ?,
+            mix_lyrics = COALESCE(mix_lyrics, lyrics)
         WHERE id = ?
         """,
         (mix_id, last_pos + 1, song_id)
@@ -1169,6 +1199,7 @@ def mix_add_song(mix_id):
 
     return redirect(f"/mix/{mix_id}/add")
 # ---------- REMOVE SONG FROM MIX ----------
+
 @app.route("/mix/<int:mix_id>/remove/<int:song_id>", methods=["POST"])
 def mix_remove_song(mix_id, song_id):
     db = get_db()
@@ -1177,6 +1208,28 @@ def mix_remove_song(mix_id, song_id):
         "UPDATE songs SET mix_id = NULL WHERE id = ? AND mix_id = ?",
         (song_id, mix_id)
     )
+    db.commit()
+
+    return redirect(f"/mix/{mix_id}/edit")
+
+# ---------- SAVE MIX LYRICS ----------
+@app.route("/mix/<int:mix_id>/lyrics/<int:song_id>", methods=["POST"])
+def save_mix_lyrics(mix_id, song_id):
+    db = get_db()
+
+    lyrics = request.form.get("mix_lyrics")
+    if lyrics is None:
+        lyrics = request.form.get("lyrics")
+
+    db.execute(
+        """
+        UPDATE songs
+        SET mix_lyrics = ?
+        WHERE id = ? AND mix_id = ?
+        """,
+        (lyrics, song_id, mix_id)
+    )
+
     db.commit()
 
     return redirect(f"/mix/{mix_id}/edit")
@@ -1237,7 +1290,8 @@ def mix_detail(mix_id):
         back_url = from_param
 
     else:
-        back_url = "/mixes"
+        # fallback to real previous page if available
+        back_url = request.referrer or "/mixes"
 
     # -------------------------------------------------
     # 🔥 SWIPE SUPPORT (DODANO)
@@ -1412,12 +1466,126 @@ def probe_detail(rehearsal_id):
         abort(404)
 
     songs = db.execute("""
-        SELECT s.*, rs.version_link
+        SELECT
+            s.id AS song_id,
+            s.title AS song_title,
+            s.artist AS song_artist,
+            s.key AS key,
+            s.mix_id,
+            s.mix_order,
+            s.status,
+            rs.version_link,
+            CASE 
+                WHEN (
+                    SELECT COUNT(*)
+                    FROM rehearsal_songs rs2
+                    JOIN songs sx ON sx.id = rs2.song_id
+                    WHERE rs2.rehearsal_id = rs.rehearsal_id
+                      AND sx.mix_id = s.mix_id
+                ) = (
+                    SELECT COUNT(*)
+                    FROM songs s_total
+                    WHERE s_total.mix_id = s.mix_id
+                      AND s_total.status = 'repertoar'
+                )
+                AND s.mix_order = (
+                    SELECT MIN(s_first.mix_order)
+                    FROM songs s_first
+                    WHERE s_first.mix_id = s.mix_id
+                      AND s_first.status = 'repertoar'
+                )
+                THEN m.name
+                ELSE NULL
+            END AS mix_name,
+
+            CASE
+                WHEN (
+                    SELECT COUNT(*)
+                    FROM rehearsal_songs rs2
+                    JOIN songs sx ON sx.id = rs2.song_id
+                    WHERE rs2.rehearsal_id = rs.rehearsal_id
+                      AND sx.mix_id = s.mix_id
+                ) = (
+                    SELECT COUNT(*)
+                    FROM songs s_total
+                    WHERE s_total.mix_id = s.mix_id
+                      AND s_total.status = 'repertoar'
+                )
+                AND s.mix_order = (
+                    SELECT MIN(s_first.mix_order)
+                    FROM songs s_first
+                    WHERE s_first.mix_id = s.mix_id
+                      AND s_first.status = 'repertoar'
+                )
+                THEN (
+                    SELECT STRING_AGG(s2.title, ', ')
+                    FROM songs s2
+                    WHERE s2.mix_id = s.mix_id
+                      AND s2.status = 'repertoar'
+                )
+                ELSE NULL
+            END AS song_titles,
+
+            CASE
+                WHEN (
+                    SELECT COUNT(*)
+                    FROM rehearsal_songs rs2
+                    JOIN songs sx ON sx.id = rs2.song_id
+                    WHERE rs2.rehearsal_id = rs.rehearsal_id
+                      AND sx.mix_id = s.mix_id
+                ) = (
+                    SELECT COUNT(*)
+                    FROM songs s_total
+                    WHERE s_total.mix_id = s.mix_id
+                      AND s_total.status = 'repertoar'
+                )
+                AND s.mix_order = (
+                    SELECT MIN(s_first.mix_order)
+                    FROM songs s_first
+                    WHERE s_first.mix_id = s.mix_id
+                      AND s_first.status = 'repertoar'
+                )
+                THEN (
+                    SELECT MIN(s2.key)
+                    FROM songs s2
+                    WHERE s2.mix_id = s.mix_id
+                      AND s2.status = 'repertoar'
+                )
+                ELSE NULL
+            END AS mix_key
+
         FROM songs s
         JOIN rehearsal_songs rs ON rs.song_id = s.id
+        LEFT JOIN mixes m ON s.mix_id = m.id
+
         WHERE rs.rehearsal_id = ?
-        ORDER BY s.title
+
+        ORDER BY
+            COALESCE(s.mix_id, 0),
+            COALESCE(s.mix_order, 0),
+            LOWER(s.title)
     """, (rehearsal_id,)).fetchall()
+
+    # -------------------------------------------------
+    # FIX: Ako je cijeli mix prisutan u probi,
+    # prikazujemo samo MIX karticu (prvu pjesmu),
+    # a skrivamo ostale pjesme iz tog mixa.
+    # -------------------------------------------------
+    filtered = []
+    mixes_shown = set()
+
+    for s in songs:
+        if s["mix_name"]:
+            # ovo je reprezentativni red za mix
+            mixes_shown.add(s["mix_id"])
+            filtered.append(s)
+        else:
+            # ako pjesma pripada mixu koji je već prikazan → preskoči
+            if s["mix_id"] and s["mix_id"] in mixes_shown:
+                continue
+            filtered.append(s)
+
+    songs = filtered
 
     mixes = db.execute("SELECT name FROM mixes ORDER BY name").fetchall()
     artists = db.execute("SELECT DISTINCT artist FROM songs ORDER BY artist").fetchall()
@@ -1441,10 +1609,191 @@ def probe_detail(rehearsal_id):
 
 
 # ---------- ADD SONG TO PROBE ----------
-@app.route("/probe/<int:rehearsal_id>/add", methods=["POST"])
+@app.route("/probe/<int:rehearsal_id>/add", methods=["GET", "POST"])
+@app.route("/probe/<int:rehearsal_id>/add_item", methods=["POST"])
 def add_song_to_probe(rehearsal_id):
     db = get_db()
 
+    # -------------------------------------------------
+    # GET → otvoriti biblioteku pjesama za dodavanje
+    # -------------------------------------------------
+    if request.method == "GET":
+
+        rehearsal = db.execute(
+            "SELECT * FROM rehearsals WHERE id=?",
+            (rehearsal_id,)
+        ).fetchone()
+
+        if not rehearsal:
+            abort(404)
+
+        # filters (same model as setlist_add / repertoar)
+        filters = {
+            "origin": request.args.get("origin"),
+            "vocal": request.args.get("vocal"),
+            "tempo": request.args.get("tempo"),
+            "genre": request.args.get("genre"),
+            "regija": request.args.get("regija"),
+            "mix": request.args.get("mix"),
+            "instrumental": request.args.get("instrumental"),
+            "q": request.args.get("q")
+        }
+
+        # =====================================================
+        # SONG QUERY (same logic as setlist_add)
+        # =====================================================
+
+        song_query = """
+            SELECT id, title, artist, key
+            FROM songs
+            WHERE status='repertoar'
+        """
+        song_params = []
+
+        for key, col in [
+            ("origin", "origin"),
+            ("vocal", "vocal"),
+            ("tempo", "tempo"),
+            ("genre", "genre"),
+            ("regija", "region"),
+        ]:
+            if filters[key]:
+                song_query += f" AND {col}=?"
+                song_params.append(filters[key])
+
+        if filters["instrumental"] == "1":
+            song_query += " AND is_instrumental=1"
+
+        if filters["mix"] == "1":
+            song_query += " AND mix_id IS NOT NULL"
+
+        if filters["q"]:
+            song_query += " AND (title ILIKE ? OR artist ILIKE ?)"
+            song_params += [f"%{filters['q']}%"] * 2
+
+        song_query += " ORDER BY LOWER(title)"
+
+        songs = db.execute(song_query, song_params).fetchall()
+
+        # =====================================================
+        # MIX QUERY (filters applied to songs inside mix)
+        # =====================================================
+
+        mix_query = """
+            SELECT 
+                m.id,
+                m.name,
+                STRING_AGG(s.title, ', ') AS song_titles,
+                MIN(s.key) AS mix_key
+            FROM mixes m
+            JOIN songs s ON s.mix_id = m.id
+            WHERE s.status='repertoar'
+        """
+
+        mix_params = []
+
+        for key, col in [
+            ("origin", "s.origin"),
+            ("vocal", "s.vocal"),
+            ("tempo", "s.tempo"),
+            ("genre", "s.genre"),
+            ("regija", "s.region"),
+        ]:
+            if filters[key]:
+                mix_query += f" AND {col}=?"
+                mix_params.append(filters[key])
+
+        if filters["instrumental"] == "1":
+            mix_query += " AND s.is_instrumental=1"
+
+        if filters["q"]:
+            mix_query += """
+                AND (
+                    m.name ILIKE ?
+                    OR s.title ILIKE ?
+                    OR s.artist ILIKE ?
+                )
+            """
+            mix_params += [f"%{filters['q']}%"] * 3
+
+        mix_query += """
+            GROUP BY m.id
+            ORDER BY LOWER(m.name)
+        """
+
+        mixes = db.execute(mix_query, mix_params).fetchall()
+
+        # if MIX filter is active → hide songs
+        if filters["mix"] == "1":
+            songs = []
+
+        return render_template(
+            "probe_add.html",
+            rehearsal=rehearsal,
+            songs=songs,
+            mixes=mixes,
+            filters=filters,
+            filters_open=request.args.get("filters") == "1",
+            nav=nav_ctx(
+                title="Dodaj iz biblioteke",
+                back_url=f"/probe/{rehearsal_id}",
+                mode="rehearsal",
+                show_back=True
+            )
+        )
+
+    item_type = request.form.get("item_type")
+
+    # setlist/probe UI sends item_id, not song_id/mix_id
+    item_id = request.form.get("item_id")
+
+    song_id = request.form.get("song_id") or (item_id if item_type == "song" else None)
+    mix_id = request.form.get("mix_id") or (item_id if item_type == "mix" else None)
+
+    # -------------------------------------------------
+    # ADD SINGLE SONG FROM LIBRARY
+    # -------------------------------------------------
+    if item_type == "song" and song_id:
+
+        version_link = request.form.get("youtube_link")
+
+        db.execute("""
+            INSERT INTO rehearsal_songs (rehearsal_id, song_id, version_link)
+            SELECT ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM rehearsal_songs
+                WHERE rehearsal_id = ? AND song_id = ?
+            )
+        """, (rehearsal_id, song_id, version_link, rehearsal_id, song_id))
+
+        db.commit()
+        return redirect(f"/probe/{rehearsal_id}")
+
+    # -------------------------------------------------
+    # ADD ENTIRE MIX TO REHEARSAL
+    # -------------------------------------------------
+    if item_type == "mix" and mix_id:
+
+        songs = db.execute("""
+            SELECT id
+            FROM songs
+            WHERE mix_id = ? AND status='repertoar'
+        """, (mix_id,)).fetchall()
+
+        for s in songs:
+            db.execute("""
+                INSERT INTO rehearsal_songs (rehearsal_id, song_id)
+                SELECT ?, ?
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM rehearsal_songs
+                    WHERE rehearsal_id = ? AND song_id = ?
+                )
+            """, (rehearsal_id, s["id"], rehearsal_id, s["id"]))
+
+        db.commit()
+        return redirect(f"/probe/{rehearsal_id}")
+
+    # fallback: manual song creation (legacy form)
     title = request.form.get("title")
     artist = request.form.get("artist")
 
@@ -1497,9 +1846,12 @@ def add_song_to_probe(rehearsal_id):
 
     db.execute("""
         INSERT INTO rehearsal_songs (rehearsal_id, song_id, version_link)
-        VALUES (?, ?, ?)
-        ON CONFLICT DO NOTHING
-    """, (rehearsal_id, song_id, version_link))
+        SELECT ?, ?, ?
+        WHERE NOT EXISTS (
+            SELECT 1 FROM rehearsal_songs
+            WHERE rehearsal_id = ? AND song_id = ?
+        )
+    """, (rehearsal_id, song_id, version_link, rehearsal_id, song_id))
 
     db.commit()
     return redirect(f"/probe/{rehearsal_id}")
