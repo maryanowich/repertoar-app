@@ -250,11 +250,13 @@ color:{% if filters.tempo==t %}#fff{% else %}#8aa4d6{% endif %};
 {% if filters.mix!="1" %}name="mix" value="1"{% endif %}
 style="
 min-height:40px;
-padding:10px 16px;
-font-size:15px;
-font-weight:700;
-border-radius:14px;
-border:1px solid #fff;
+padding:8px 16px;
+font-size:15px;font-weight:700;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+border-radius:14px;border:1px solid #fff;
 background:{% if filters.mix=="1" %}#fff{% else %}#161618{% endif %};
 color:{% if filters.mix=="1" %}#000{% else %}#fff{% endif %};
 ">
@@ -280,9 +282,9 @@ padding:10px 16px;
 font-size:15px;
 font-weight:700;
 border-radius:14px;
-border:1px solid #00ffe1;
-background:{% if filters.instrumental=="1" %}#00ffe1{% else %}#161618{% endif %};
-color:{% if filters.instrumental=="1" %}#000{% else %}#00ffe1{% endif %};
+border-radius:14px;border:1px solid #ff9f1a;
+background:{% if filters.instrumental=="1" %}#ff9f1a{% else %}#161618{% endif %};
+color:{% if filters.instrumental=="1" %}#000{% else %}#ffb84d{% endif %};
 display:flex;
 align-items:center;
 justify-content:center;
@@ -302,7 +304,7 @@ gap:6px;
 <div class="filter-title">Žanr</div>
 <div class="filter-card">
 
-{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+{% for g in ["Fešta","Vlakić","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
 
 <form method="get">
 
