@@ -258,7 +258,7 @@ border:1px solid #fff;
 background:{% if filters.mix=="1" %}#fff{% else %}#161618{% endif %};
 color:{% if filters.mix=="1" %}#000{% else %}#fff{% endif %};
 ">
-MIX
+<span class="icon icon-miksevi"></span> Mix
 </button>
 
 </form>
@@ -288,7 +288,7 @@ align-items:center;
 justify-content:center;
 gap:6px;
 ">
-<span class="icon icon-piano"></span> INSTR
+<span class="icon icon-piano"></span> Instrumental
 </button>
 
 </form>
@@ -427,8 +427,8 @@ style="display:flex;justify-content:space-between;align-items:center;">
 </div>
 
 <div class="meta">
-Tonalitet: {{ m.mix_key or '-' }} <br>
-{{ m.song_titles or 'Nema pjesama u miksu' }}
+Tonalitet: <strong>{{ m.mix_key or '-' }} <br>
+{{ m.song_titles or 'Nema pjesama u miksu' }}</strong>
 </div>
 
 </div>

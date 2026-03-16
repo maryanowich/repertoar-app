@@ -243,7 +243,7 @@ align-items:center;
 justify-content:center;
 gap:6px;
 ">
-<span class="icon icon-piano"></span> INSTR
+<span class="icon icon-piano"></span> Instrumental
 </button>
 </form>
 
@@ -254,7 +254,7 @@ gap:6px;
 <div class="filter-section">
 <div class="filter-title">Žanr</div>
 <div class="filter-card">
-{% for g in ["Fešta","Party igre","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
+{% for g in ["Fešta","Vlakić","Trash","Pop / Rock","Zabavno","Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"] %}
 <form method="get">
 {% for k,v in filters.items() if k!='genre' and v %}
 <input type="hidden" name="{{k}}" value="{{v}}">
@@ -333,7 +333,7 @@ color:{% if filters.regija==r %}#000{% else %}#7bd9a4{% endif %};
             Tonalitet: <strong>{{ mix.mix_key or '-' }}</strong><br>
         
             {% if mix.song_count > 0 %}
-                {{ mix.song_titles }}<br>
+                <strong>{{ mix.song_titles }}<br></strong>
                 {{ mix.song_count }}
                 {{ 'pjesma' if mix.song_count == 1 else 'pjesme' }}
             {% else %}
