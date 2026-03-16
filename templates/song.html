@@ -44,7 +44,7 @@
 <div style="display:flex; justify-content:center;">
     <div style="width:100%; max-width:720px; padding:20px;">
 
-        <div style="font-size:34px;font-weight:700;text-align:center;margin-bottom:6px;">
+        <div style="font-size:30px;font-weight:600;text-align:center;margin-bottom:6px;">
             {{ song.title }}
         </div>
 
@@ -95,8 +95,16 @@ body.font-large .lyrics {
     cursor: pointer;
     z-index: 1200;
 }
+
 .nav-arrow.left { left: 22px; }
 .nav-arrow.right { right: 22px; }
+
+/* Hide arrows on tablets and phones (use swipe instead) */
+@media (max-width: 1024px) {
+    .nav-arrow {
+        display: none;
+    }
+}
 
 .set-position-indicator {
     position: fixed;
@@ -141,6 +149,33 @@ function goToItem(index) {
     let item = setItems[index];
     window.location.href = "/" + item.type + "/" + item.id + "?from=setlist&set=" + setId;
 }
+
+// ===== SWIPE NAVIGATION (tablet & mobile) =====
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleSwipe() {
+    const threshold = 60;
+
+    if (touchEndX < touchStartX - threshold) {
+        goToItem({{ current_index + 1 }});
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    if (touchEndX > touchStartX + threshold) {
+        goToItem({{ current_index - 1 }});
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+}
+
+document.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener("touchend", (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
 </script>
 {% endif %}
 

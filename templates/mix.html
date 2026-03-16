@@ -49,10 +49,20 @@
 <div style="display:flex; justify-content:center; padding:20px;">
     <div style="width:100%; max-width:720px;">
 
+        <!-- MIX TITLE 
+        <div style="font-size:34px;font-weight:800;text-align:center;margin-bottom:6px;">
+            <strong>{{ mix.name }} </strong>
+        </div> -->
+
+        <!-- SONGS IN MIX -->
+        <div style="font-size:20px;color:#aaa;text-align:center;margin-bottom:px; border-bottom:1px solid #222; padding:16px;">
+            <strong>{{ songs | map(attribute='title') | join(' • ') }}</strong>
+        </div>
+
         {% for song in songs %}
         <div style="padding:40px 10px;">
 
-            <div style="font-size:34px;font-weight:700;text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <div style="font-size:30px;font-weight:600;text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:10px;">
                 <span>{{ song.mix_order }}. {{ song.title }}</span>
 
                 {% if song.is_new %}
@@ -70,7 +80,7 @@
                 {% endif %}
             </div>
 
-            <div style="font-size:20px;color:#aaa;text-align:center;margin-bottom:16px;">
+            <div style="font-size:16px;color:#aaa;text-align:center;margin-bottom:16px;">
                 {{ song.artist }} • {{ song.key }}
                 {% if song.tempo %}• {{ song.tempo }}{% endif %}
                 {% if song.genre %}• {{ song.genre }}{% endif %}
@@ -108,6 +118,35 @@ function goToItem(index) {
     window.location.href =
         "/" + item.type + "/" + item.id + "?from=setlist&set=" + setId;
 }
+
+// ===== SWIPE NAVIGATION (tablet & mobile) =====
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleSwipe() {
+    const threshold = 60; // swipe distance
+
+    if (touchEndX < touchStartX - threshold) {
+        // swipe left → next item
+        goToItem({{ current_index + 1 }});
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    if (touchEndX > touchStartX + threshold) {
+        // swipe right → previous item
+        goToItem({{ current_index - 1 }});
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+}
+
+document.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener("touchend", (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
 </script>
 
 <style>
@@ -130,6 +169,13 @@ function goToItem(index) {
 }
 .nav-arrow.left { left: 24px; }
 .nav-arrow.right { right: 24px; }
+
+/* Hide arrows on tablets and phones (use swipe instead) */
+@media (max-width: 1024px) {
+    .nav-arrow {
+        display: none;
+    }
+}
 
 /* 1 / 3 – GORE LIJEVO */
 .set-position-indicator {
