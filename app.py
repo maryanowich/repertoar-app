@@ -343,33 +343,64 @@ def api_song_stats():
         """
     ).fetchone()
 
-    # genre statistics (from view)
-    genres = db.execute(
-        "SELECT genre, genre_count AS count FROM v_brojzanr ORDER BY genre_count DESC"
+    # all possible genres (must match frontend filter list)
+    all_genres = [
+        "Fešta","Party igre","Trash","Pop / Rock","Zabavno",
+        "Narodno","Balada","Tambure","Domoljubne","Funky","Jazzy"
+    ]
+
+    db_genres = db.execute(
+        "SELECT genre, genre_count AS count FROM v_brojzanr"
     ).fetchall()
 
+    # convert to dict for easy lookup
+    genre_map = {g["genre"]: g["count"] for g in db_genres}
+
+    # build full list (including 0)
+    genres = []
+    for g in all_genres:
+        genres.append({
+            "genre": g,
+            "count": genre_map.get(g, 0)
+        })
+
     # region statistics
-    regions = db.execute(
+    # all possible regions (must match frontend filter list)
+    all_regions = [
+        "Hrvatska","Dalmacija","Slavonija","Istra","Zagorje","Ex-Yu","BIH"
+    ]
+
+    db_regions = db.execute(
         """
         SELECT region, COUNT(*) AS count
         FROM songs
         WHERE status='repertoar' AND region IS NOT NULL AND region != ''
         GROUP BY region
-        ORDER BY count DESC
         """
     ).fetchall()
 
+    # convert to dict
+    region_map = {r["region"]: r["count"] for r in db_regions}
+
+    # build full list (including 0)
+    regions = []
+    for r in all_regions:
+        regions.append({
+            "region": r,
+            "count": region_map.get(r, 0)
+        })
+
     return jsonify({
         "total_songs": stats["total_songs"],
-        "tempo_spora": tempo_stats["tempo_spora"],
-        "tempo_srednja": tempo_stats["tempo_srednja"],
-        "tempo_brza": tempo_stats["tempo_brza"],
+        "tempo_spora": tempo_stats["tempo_spora"] or 0,
+        "tempo_srednja": tempo_stats["tempo_srednja"] or 0,
+        "tempo_brza": tempo_stats["tempo_brza"] or 0,
         "total_domace": stats["total_domace"],
         "total_strano": stats["total_strano"],
         "total_musko": stats["total_musko"],
         "total_zensko": stats["total_zensko"],
-        "total_duet": duet_stats["total_duet"],
-        "total_instrumental": stats["total_instrumental"],
+        "total_duet": duet_stats["total_duet"] or 0,
+        "total_instrumental": stats["total_instrumental"] or 0,
         "total_mixes": mix_count,
         "total_setlists": setlist_count,
         "total_rehearsals": rehearsal_count,
