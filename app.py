@@ -4,7 +4,20 @@ import psycopg2
 import psycopg2.extras
 import os
 
+# 3) Helper function after imports
+def is_local_request():
+    host = request.host.split(":")[0]
+    return (
+        host == "localhost"
+        or host.startswith("127.")
+        or host.startswith("192.168.")
+        or host.startswith("10.")
+    )
+
 app = Flask(__name__)
+
+# 1) Add ACCESS_KEY after app = Flask(...)
+ACCESS_KEY = os.environ.get("ACCESS_KEY", "Manifesto2025")
 
 # simple session setup for role control
 app.secret_key = "repertoar-dev-key"
@@ -23,6 +36,34 @@ def set_default_session_values():
 
     if "auto_lock" not in session:
         session["auto_lock"] = "off"
+
+    # 2) Add access_granted and agreed session defaults
+    if "access_granted" not in session:
+        session["access_granted"] = False
+
+    if "agreed" not in session:
+        session["agreed"] = False
+
+
+# 5) Auth guard after set_default_session_values
+@app.before_request
+def auth_guard():
+
+    # allow static
+    if request.path.startswith("/static"):
+        return
+
+    # allow access page
+    if request.path.startswith("/access"):
+        return
+
+    # DEV / LOCAL BYPASS
+    if is_local_request():
+        return
+
+    # require access key
+    if not session.get("access_granted"):
+        return redirect("/access")
 
 # ---------- SESSION HELPERS ----------
 
@@ -191,6 +232,22 @@ def viewer_mode():
     session["role"] = "viewer"
     return "Viewer mode ON"
 
+# 4) New /access route after /viewer
+@app.route("/access", methods=["GET", "POST"])
+def access_gate():
+    if request.method == "POST":
+        key = request.form.get("key")
+        agree = request.form.get("agree")
+
+        if key == ACCESS_KEY and agree == "on":
+            session["access_granted"] = True
+            session["agreed"] = True
+            return redirect("/")
+
+        return "Neispravan ključ ili morate prihvatiti uvjete"
+
+    return render_template("access.html")
+
 # ---------- SETTINGS: LANGUAGE ----------
 @app.route("/settings/language/<lang>", methods=["POST"])
 def set_language(lang):
@@ -220,13 +277,31 @@ def set_auto_lock(mode):
     return ("", 204)
 
 def nav_ctx(title=None, back_url=None, mode="library", show_back=True, show_settings=True):
-    # if back_url is not explicitly provided, fall back to referrer
-    if not back_url:
-        back_url = request.referrer or "/"
+    # PRIORITET 1: explicit back_url (ako je ručno zadan)
+    if back_url:
+        final_back = back_url
+
+    # PRIORITET 2: "from" param koji nosi cijeli URL (npr. /probe/3)
+    elif request.args.get("from") and request.args.get("from").startswith("/"):
+        final_back = request.args.get("from")
+
+    # PRIORITET 3: HTTP referrer (ali samo ako je validan)
+    elif request.referrer and request.host in request.referrer:
+        # makni domena dio → ostavi samo path
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(request.referrer)
+            final_back = parsed.path or "/"
+        except:
+            final_back = "/"
+
+    # FINAL fallback
+    else:
+        final_back = "/"
 
     return {
         "title": title,
-        "back_url": back_url,
+        "back_url": final_back,
         "show_back": show_back,
         "mode": mode,
         "show_settings": show_settings
@@ -295,6 +370,7 @@ def home():
         mix_count=mix_count,
         rehearsal_count=rehearsal_count,
         setlist_count=setlist_count,
+        role=session.get("role"),
         nav=nav_ctx(
             title=None,
             back_url=None,
@@ -507,10 +583,10 @@ def song_detail(song_id):
     if from_param == "setlist" and set_id:
         back_url = f"/setlist/{set_id}"
 
-    elif from_param and from_param.startswith("/probe/"):
-        back_url = from_param
+    elif set_id:
+        back_url = f"/probe/{set_id}"
 
-    elif from_param:
+    elif from_param and from_param.startswith("/"):
         back_url = from_param
 
     else:
@@ -1314,10 +1390,10 @@ def mix_detail(mix_id):
     if from_param == "setlist" and set_id:
         back_url = f"/setlist/{set_id}"
 
-    elif from_param and from_param.startswith("/probe/"):
-        back_url = from_param
+    elif set_id:
+        back_url = f"/probe/{set_id}"
 
-    elif from_param:
+    elif from_param and from_param.startswith("/"):
         back_url = from_param
 
     else:
@@ -1485,6 +1561,7 @@ def delete_probe(rehearsal_id):
 
     return redirect("/probe")
 
+# NOTE: rehearsal_songs must have column `position INTEGER`
 # ---------- PROBE DETAIL ----------
 @app.route("/probe/<int:rehearsal_id>")
 def probe_detail(rehearsal_id):
@@ -1498,6 +1575,8 @@ def probe_detail(rehearsal_id):
 
     songs = db.execute("""
         SELECT
+            rs.id AS rs_id,
+            rs.position,
             s.id AS song_id,
             s.title AS song_title,
             s.artist AS song_artist,
@@ -1525,6 +1604,13 @@ def probe_detail(rehearsal_id):
                     WHERE s_first.mix_id = s.mix_id
                       AND s_first.status = 'repertoar'
                 )
+                AND EXISTS (
+                    SELECT 1 FROM rehearsal_songs rsx
+                    JOIN songs sx2 ON sx2.id = rsx.song_id
+                    WHERE rsx.rehearsal_id = rs.rehearsal_id
+                      AND sx2.mix_id = s.mix_id
+                      AND rsx.is_mix = 1
+                )
                 THEN m.name
                 ELSE NULL
             END AS mix_name,
@@ -1547,6 +1633,13 @@ def probe_detail(rehearsal_id):
                     FROM songs s_first
                     WHERE s_first.mix_id = s.mix_id
                       AND s_first.status = 'repertoar'
+                )
+                AND EXISTS (
+                    SELECT 1 FROM rehearsal_songs rsx
+                    JOIN songs sx2 ON sx2.id = rsx.song_id
+                    WHERE rsx.rehearsal_id = rs.rehearsal_id
+                      AND sx2.mix_id = s.mix_id
+                      AND rsx.is_mix = 1
                 )
                 THEN (
                     SELECT STRING_AGG(s2.title, ', ')
@@ -1576,6 +1669,13 @@ def probe_detail(rehearsal_id):
                     WHERE s_first.mix_id = s.mix_id
                       AND s_first.status = 'repertoar'
                 )
+                AND EXISTS (
+                    SELECT 1 FROM rehearsal_songs rsx
+                    JOIN songs sx2 ON sx2.id = rsx.song_id
+                    WHERE rsx.rehearsal_id = rs.rehearsal_id
+                      AND sx2.mix_id = s.mix_id
+                      AND rsx.is_mix = 1
+                )
                 THEN (
                     SELECT MIN(s2.key)
                     FROM songs s2
@@ -1591,10 +1691,7 @@ def probe_detail(rehearsal_id):
 
         WHERE rs.rehearsal_id = ?
 
-        ORDER BY
-            COALESCE(s.mix_id, 0),
-            COALESCE(s.mix_order, 0),
-            LOWER(s.title)
+        ORDER BY COALESCE(rs.position, rs.id)
     """, (rehearsal_id,)).fetchall()
 
     # -------------------------------------------------
@@ -1774,12 +1871,20 @@ def add_song_to_probe(rehearsal_id):
         )
 
     item_type = request.form.get("item_type")
-
-    # setlist/probe UI sends item_id, not song_id/mix_id
     item_id = request.form.get("item_id")
 
-    song_id = request.form.get("song_id") or (item_id if item_type == "song" else None)
-    mix_id = request.form.get("mix_id") or (item_id if item_type == "mix" else None)
+    song_id = request.form.get("song_id")
+    mix_id = request.form.get("mix_id")
+
+    # 🔥 NORMALIZE FRONTEND INPUT (IMPORTANT)
+    # Frontend šalje samo item_type + item_id
+    if item_type == "song" and item_id:
+        song_id = item_id
+        mix_id = None
+
+    if item_type == "mix" and item_id:
+        mix_id = item_id
+        song_id = None
 
     # -------------------------------------------------
     # ADD SINGLE SONG FROM LIBRARY
@@ -1788,14 +1893,23 @@ def add_song_to_probe(rehearsal_id):
 
         version_link = request.form.get("youtube_link")
 
+        # 🔥 get next position
+        row = db.execute("""
+            SELECT COALESCE(MAX(position), 0) AS max_pos
+            FROM rehearsal_songs
+            WHERE rehearsal_id = ?
+        """, (rehearsal_id,)).fetchone()
+
+        next_position = row["max_pos"] + 1
+
         db.execute("""
-            INSERT INTO rehearsal_songs (rehearsal_id, song_id, version_link)
-            SELECT ?, ?, ?
+            INSERT INTO rehearsal_songs (rehearsal_id, song_id, version_link, position, is_mix)
+            SELECT ?, ?, ?, ?, 0
             WHERE NOT EXISTS (
                 SELECT 1 FROM rehearsal_songs
                 WHERE rehearsal_id = ? AND song_id = ?
             )
-        """, (rehearsal_id, song_id, version_link, rehearsal_id, song_id))
+        """, (rehearsal_id, song_id, version_link, next_position, rehearsal_id, song_id))
 
         db.commit()
         return redirect(f"/probe/{rehearsal_id}")
@@ -1811,15 +1925,26 @@ def add_song_to_probe(rehearsal_id):
             WHERE mix_id = ? AND status='repertoar'
         """, (mix_id,)).fetchall()
 
+        # 🔥 start from current max position
+        row = db.execute("""
+            SELECT COALESCE(MAX(position), 0) AS max_pos
+            FROM rehearsal_songs
+            WHERE rehearsal_id = ?
+        """, (rehearsal_id,)).fetchone()
+
+        position = row["max_pos"]
+
         for s in songs:
+            position += 1
+
             db.execute("""
-                INSERT INTO rehearsal_songs (rehearsal_id, song_id)
-                SELECT ?, ?
+                INSERT INTO rehearsal_songs (rehearsal_id, song_id, position, is_mix)
+                SELECT ?, ?, ?, 1
                 WHERE NOT EXISTS (
                     SELECT 1 FROM rehearsal_songs
                     WHERE rehearsal_id = ? AND song_id = ?
                 )
-            """, (rehearsal_id, s["id"], rehearsal_id, s["id"]))
+            """, (rehearsal_id, s["id"], position, rehearsal_id, s["id"]))
 
         db.commit()
         return redirect(f"/probe/{rehearsal_id}")
@@ -1925,6 +2050,7 @@ def push_song(song_id):
     return redirect(request.referrer or "/probe")
 
 
+
 # ---------- REMOVE SONG FROM PROBE ----------
 @app.route("/probe/<int:rehearsal_id>/remove/<int:song_id>", methods=["POST"])
 def remove_song_from_probe(rehearsal_id, song_id):
@@ -1937,6 +2063,57 @@ def remove_song_from_probe(rehearsal_id, song_id):
 
     db.commit()
     return redirect(f"/probe/{rehearsal_id}")
+
+# ---------- REMOVE MIX FROM PROBE ----------
+@app.route("/probe/<int:rehearsal_id>/remove_mix/<int:mix_id>", methods=["POST"])
+def remove_mix_from_probe(rehearsal_id, mix_id):
+    db = get_db()
+
+    # remove ALL songs that belong to this mix from rehearsal
+    db.execute("""
+        DELETE FROM rehearsal_songs
+        WHERE rehearsal_id = ?
+          AND song_id IN (
+              SELECT id FROM songs WHERE mix_id = ?
+          )
+    """, (rehearsal_id, mix_id))
+
+    db.commit()
+    return redirect(f"/probe/{rehearsal_id}")
+
+
+# ---------- REORDER PROBE ----------
+@app.route("/probe/<int:rehearsal_id>/reorder", methods=["POST"])
+def probe_reorder(rehearsal_id):
+    db = get_db()
+
+    data = request.get_json()
+    order = data.get("order")
+
+    if not order:
+        abort(400)
+
+    position = 1
+
+    for item in order:
+
+        # 🔥 SKIP mix (nije u DB)
+        if str(item).startswith("mix-"):
+            continue
+
+        # ovo je rehearsal_songs.id
+        rs_id = int(item)
+
+        db.execute("""
+            UPDATE rehearsal_songs
+            SET position = ?
+            WHERE id = ? AND rehearsal_id = ?
+        """, (position, rs_id, rehearsal_id))
+
+        position += 1
+
+    db.commit()
+    return ("", 204)
 
 
 # ---------- ADD SONG DIRECTLY TO REPERTOAR ----------
@@ -2285,7 +2462,7 @@ def setlist_add(setlist_id):
         song_query += " AND mix_id IS NOT NULL"
 
     if filters["q"]:
-        song_query += " AND (title LIKE ? OR artist LIKE ?)"
+        song_query += " AND (title ILIKE ? OR artist ILIKE ?)"
         song_params += [f"%{filters['q']}%"] * 2
 
     song_query += " ORDER BY LOWER(title)"
@@ -2327,9 +2504,9 @@ def setlist_add(setlist_id):
     if filters["q"]:
         mix_query += """
             AND (
-                m.name LIKE ?
-                OR s.title LIKE ?
-                OR s.artist LIKE ?
+                m.name ILIKE ?
+                OR s.title ILIKE ?
+                OR s.artist ILIKE ?
             )
         """
         mix_params += [f"%{filters['q']}%"] * 3

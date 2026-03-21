@@ -64,11 +64,36 @@
         <label style="display:block;margin-bottom:6px;color:#aaa;gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
             Datum
         </label>
-        <input
-            type="date"
-            name="date"
-            style="width:100%;height:48px;border-radius:12px;background:#111;border:1px solid #333;color:#fff;padding:0 14px;font-size:16px;margin-bottom:16px;"
-        >
+        <div style="position:relative; margin-bottom:16px;">
+            <input
+                type="date"
+                name="date"
+                style="
+                    width:100%;
+                    height:48px;
+                    border-radius:12px;
+                    background:#111;
+                    border:1px solid #333;
+                    color:#fff;
+                    padding:0 40px 0 14px;
+                    font-size:16px;
+                    color-scheme: dark;
+                    line-height:48px;
+                "
+            >
+
+            <span class="icon icon-calendar"
+                  style="
+                    position:absolute;
+                    right:14px;
+                    top:calc(50% - 14px);
+                    width:20px;
+                    height:20px;
+                    pointer-events:none;
+                    opacity:0.8;
+                  ">
+            </span>
+        </div>
 
         <label style="display:block;margin-bottom:6px;color:#aaa;gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
             Napomena
@@ -81,29 +106,41 @@
         >
 
         <div style="text-align:center;">
-            <button
-                type="submit"
-                style="
-                    display:inline-flex;
-                    align-items:center;
-                    gap:8px;
-                    padding:10px 16px;
-                    background:#111;
-                    border:1px solid #333;
-                    color:#fff;
-                    border-radius:12px;
-                    font-weight:600;
-                    font-size:16px;
-                    cursor:pointer;
-                "
-            >
-                <span class="icon icon-save"></span>
-                Spremi
-            </button>
+            <button type="submit"
+    style="
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:12px 22px;
+        background:#1f1f23;
+        border:1px solid #2a2a30;
+        color:#fff;
+        border-radius:12px;
+        font-weight:600;
+        font-size:15px;
+        cursor:pointer;
+    ">
+    <span style="display:inline-flex;align-items:center;gap:8px;">
+        <span class="icon icon-save" style="width:16px;height:16px;background-color:currentColor;"></span>
+        Spremi
+    </span>
+</button>
         </div>
 
     </form>
 
 </div>
+
+<style>
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 40px;
+    height: 48px;
+    cursor: pointer;
+}
+</style>
 
 {% endblock %}

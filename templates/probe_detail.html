@@ -36,7 +36,7 @@
 <!-- TOGGLE ADD / EDIT SONG BUTTON -->
 <div style="position:fixed;top:30px;right:16px;z-index:1000;">
 <button id="toggle-add-btn"
-    onclick="toggleAddMenu()"
+    onclick="handleAddButton()"
     style="
         width:36px;
         height:36px;
@@ -79,7 +79,7 @@
 </div>
 
 <!-- PJESME NA PROBI -->
-<div class="list">
+<div id="sortableList" class="list" style="padding-top:20px;">
 
 {% set ns = namespace(last_mix=None) %}
 {% for song in songs %}
@@ -88,31 +88,44 @@
 
         {% if song.mix_id != ns.last_mix %}
 
-    <div class="song-row"
-         onclick="window.location.href='/mix/{{ song.mix_id }}?from={{ request.path }}'"
-         style="cursor:pointer;">
+    <div class="song-row draggable-item"
+         data-id="mix-{{ song.mix_id }}"
+         style="display:flex;justify-content:space-between;align-items:center;">
+    
+        <div class="clickable"
+             data-href="/mix/{{ song.mix_id }}?from=probe&set={{ rehearsal.id }}"
+             style="flex:1; position:relative;">
 
-        <div class="song-main" style="flex:1;">
+            <div class="song-main" style="flex:1;">
 
-            <div class="title" style="display:flex;align-items:center;gap:8px;">
-                <span class="icon icon-mix"></span>
-                {{ song.mix_name or song.planned_mix or 'Mix' }}
+                <div class="title" style="display:flex;align-items:center;gap:8px;">
+                    <span class="icon icon-mix"></span>
+                    {{ song.mix_name or song.planned_mix or 'Mix' }}
+                </div>
+
+                <div class="meta">
+                    Tonalitet: <strong>{{ song.mix_key or '-' }}
+
+                    {% if song.song_titles %}
+                        <br>
+                        {{ song.song_titles }} </strong>
+                    {% endif %}
+                </div>
+
             </div>
-
-            <div class="meta">
-                Tonalitet: <strong>{{ song.mix_key or '-' }}
-
-                {% if song.song_titles %}
-                    <br>
-                    {{ song.song_titles }} </strong>
-                {% endif %}
-            </div>
-
         </div>
 
         <!-- ACTIONS -->
         <div style="display:flex;gap:6px;align-items:center;">
-
+            <div style="
+                padding:6px 10px;
+                border-radius:10px;
+                background: rgba(0, 0, 0, 0.18);
+                color:#0a0a0a;
+                font-weight:600;
+            ">
+                # {{ loop.index }}
+            </div>
             <!-- EDIT MIX -->
             <a href="/mix/{{ song.mix_id }}/edit"
                onclick="event.stopPropagation();"
@@ -143,87 +156,101 @@
 
     {% else %}
 
-        <div class="song-row" style="cursor:pointer;">
-        <!-- SONG INFO -->
-        <div class="song-main" style="flex:1;">
-            <div class="title" style="display:flex;align-items:center;gap:8px;">
-                <span class="icon icon-repertoar"></span>
-                {{ song.song_title }}
+        <div class="song-row draggable-item"
+             data-id="{{ song.rs_id }}"
+             style="display:flex;justify-content:space-between;align-items:center;">
+
+            <div class="clickable"
+                 data-href="/song/{{ song.song_id }}?from=probe&set={{ rehearsal.id }}"
+                 style="flex:1; position:relative;">
+                <!-- SONG INFO -->
+                <div class="song-main" style="flex:1;">
+                    <div class="title" style="display:flex;align-items:center;gap:8px;">
+                        <span class="icon icon-repertoar"></span>
+                        {{ song.song_title }}
+                    </div>
+                
+                    <div class="meta">
+                        {{ song.song_artist }}
+                        • Tonalitet: <strong>{{ song.key or '-' }}</strong>
+                
+                        {% if song.planned_mix %}
+                            <span style="display:inline-flex;align-items:center;gap:6px;margin-left:6px;">
+                                • <span class="icon icon-mix"></span>
+                                {{ song.planned_mix }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-        
-            <div class="meta">
-                {{ song.song_artist }}
-                • Tonalitet: <strong>{{ song.key or '-' }}</strong>
-        
-                {% if song.planned_mix %}
-                    <span style="display:inline-flex;align-items:center;gap:6px;margin-left:6px;">
-                        • <span class="icon icon-mix"></span>
-                        {{ song.planned_mix }}
-                    </span>
+
+            <!-- ACTIONS -->
+            <div style="display:flex;gap:6px;align-items:center;">
+                <div style="
+                    padding:6px 10px;
+                    border-radius:10px;
+                    background: rgba(0, 0, 0, 0.18);
+                    color:#0a0a0a;
+                    font-weight:600;
+                ">
+                    # {{ loop.index }}
+                </div>
+                {% if song.version_link %}
+                    <!-- YOUTUBE LINK -->
+                    <a href="{{ song.version_link }}"
+                       target="_blank"
+                       onclick="event.stopPropagation();"
+                       class="action-btn"
+                       title="Verzija pjesme (YouTube)">
+                        <span class="icon icon-youtube"></span>
+                    </a>
                 {% endif %}
+
+                {% if song.status != 'repertoar' %}
+                    <!-- PUSH TO REPERTOAR (OPASNO, NE MIJENJATI LOGIKU) -->
+                    <form method="post"
+                          action="/probe/push/{{ song.id }}"
+                          onclick="event.stopPropagation();">
+
+                        <button class="action-btn check"
+                                title="Pošalji u repertoar">
+                            <span class="icon icon-check"></span>
+                        </button>
+
+                    </form>
+                {% else %}
+                    <!-- VEĆ U REPERTOARU -->
+                    <div class="action-btn check"
+                         style="opacity:.4; cursor:default;"
+                         title="Već u repertoaru">
+                        <span class="icon icon-check"></span>
+                    </div>
+                {% endif %}
+
+                <!-- EDIT -->
+                <a href="/repertoar/{{ song.song_id }}/edit"
+                   onclick="event.stopPropagation();"
+                   class="action-btn edit"
+                   title="Uredi pjesmu" >
+                    <span class="icon icon-edit"></span>
+                </a>
+
+                <!-- DELETE FROM PROBE -->
+                <form method="post"
+                      action="/probe/{{ rehearsal.id }}/remove/{{ song.song_id }}"
+                      onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni da želite ukloniti ovu pjesmu s probe?');">
+
+                    <button class="action-btn delete"
+                            onclick="event.stopPropagation();"
+                            title="Ukloni s probe">
+                        <span class="icon icon-delete"></span>
+                    </button>
+
+                </form>
+
             </div>
+
         </div>
-        
-
-        <!-- ACTIONS -->
-<div style="display:flex;gap:6px;align-items:center;">
-
-    {% if song.version_link %}
-        <!-- YOUTUBE LINK -->
-        <a href="{{ song.version_link }}"
-           target="_blank"
-           onclick="event.stopPropagation();"
-           class="action-btn"
-           title="Verzija pjesme (YouTube)">
-            <span class="icon icon-youtube"></span>
-        </a>
-    {% endif %}
-
-    {% if song.status != 'repertoar' %}
-        <!-- PUSH TO REPERTOAR (OPASNO, NE MIJENJATI LOGIKU) -->
-        <form method="post"
-              action="/probe/push/{{ song.id }}"
-              onclick="event.stopPropagation();">
-
-            <button class="action-btn check"
-                    title="Pošalji u repertoar">
-                <span class="icon icon-check"></span>
-            </button>
-
-        </form>
-    {% else %}
-        <!-- VEĆ U REPERTOARU -->
-        <div class="action-btn check"
-             style="opacity:.4; cursor:default;"
-             title="Već u repertoaru">
-            <span class="icon icon-check"></span>
-        </div>
-    {% endif %}
-
-    <!-- EDIT -->
-    <a href="/repertoar/{{ song.song_id }}/edit"
-       onclick="event.stopPropagation();"
-       class="action-btn edit"
-       title="Uredi pjesmu" >
-        <span class="icon icon-edit"></span>
-    </a>
-
-    <!-- DELETE FROM PROBE -->
-    <form method="post"
-          action="/probe/{{ rehearsal.id }}/remove/{{ song.song_id }}"
-          onsubmit="event.stopPropagation(); return confirm('Jeste li sigurni da želite ukloniti ovu pjesmu s probe?');">
-
-        <button class="action-btn delete"
-                onclick="event.stopPropagation();"
-                title="Ukloni s probe">
-            <span class="icon icon-delete"></span>
-        </button>
-
-    </form>
-
-</div>
-
-</div>
     {% endif %}
 {% endfor %}
 
@@ -235,6 +262,7 @@
 {% endif %}
 
 
+<!-- END sortableList -->
 </div>
 
 <!-- ADD / EDIT SONG FORM -->
@@ -439,6 +467,17 @@
 
 
 <script>
+function handleAddButton(){
+    const form = document.getElementById("add-song-form");
+
+    if(form.style.display === "block"){
+        // if form is open → CLOSE it (this is the FIX)
+        toggleAddSong();
+    } else {
+        // if form is closed → open menu (original behavior)
+        toggleAddMenu();
+    }
+}
 function toggleAddMenu(){
     const menu = document.getElementById("add-menu");
     menu.style.display = menu.style.display === "block" ? "none" : "block";
@@ -468,6 +507,7 @@ function openLibrary(){
                     <span class="icon icon-plus"></span>
                 </span>
             `;
+            document.getElementById("add-menu").style.display = "none";
         } else {
             form.style.display = "block";
             if (emptyMsg) emptyMsg.style.display = "none";
@@ -477,6 +517,7 @@ function openLibrary(){
                     <span class="icon icon-close"></span>
                 </span>
             `;
+            document.getElementById("add-menu").style.display = "none";
     
             // ⬇️ KLJUČNI DIO
             const headerOffset = 190; // visina action bara + malo zraka
@@ -559,6 +600,62 @@ document.addEventListener("DOMContentLoaded", function () {
     width:8px;
     height:8px;
     border-radius:50%;
+}
+</style>
+<!-- SORTABLE -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+new Sortable(document.getElementById('sortableList'), {
+    animation: 200,
+    delay: 300,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 5,
+    handle: '.song-main',
+    ghostClass: 'drag-ghost',
+    chosenClass: 'drag-chosen',
+
+    filter: '.action-btn',
+    preventOnFilter: false,
+
+    onEnd: function () {
+
+        let order = [];
+
+        document.querySelectorAll('.draggable-item').forEach(el => {
+            order.push(el.dataset.id);
+        });
+
+        fetch("/probe/{{ rehearsal.id }}/reorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: order })
+        }).then(() => location.reload());
+    }
+});
+</script>
+
+<!-- TAP HANDLER -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.clickable').forEach(el => {
+        el.addEventListener('click', function () {
+            const url = this.dataset.href;
+            if (url) window.location.href = url;
+        });
+    });
+});
+</script>
+
+<style>
+.drag-chosen {
+    background:#222 !important;
+    transform: scale(1.02);
+    box-shadow: 0 0 14px rgba(0,255,225,0.4);
+}
+
+.drag-ghost {
+    opacity:0.4;
 }
 </style>
 {% endblock %}
