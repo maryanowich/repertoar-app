@@ -9,7 +9,7 @@
 <div class="action-bar"
      style="
         padding:16px;
-        top:88px;
+        top:16px;
         border-bottom:1px solid #222;
         background:#161618;
         display:flex;
@@ -94,36 +94,46 @@
         Datum probe *
     </label>
 
-    <input
-        type="date"
-        name="date"
-        value="{{ rehearsal.date }}"
-        required
-        style="
-            width:100%;
-            height:48px;
-            border-radius:12px;
-            background:var(--bg-main);
-            border:1px solid #2a2a30;
-            color:#fff;
-            padding:0 14px;
-            font-size:16px;
-            margin-bottom:16px;
-            text-align:left;
-            color-scheme: dark;
-            position:relative;
-        "
-    >
-    <span class="icon icon-calendar"
-          style="
-            position:absolute;
-            right:30px;
-            top:50%;
-            transform:translateY(-50%);
-            pointer-events:none;
-            opacity:0.8;
-          ">
-    </span>
+    <div style="position:relative; display:flex; align-items:center;">
+
+        <input
+            type="date"
+            name="date"
+            value="{{ rehearsal.date }}"
+            required
+            style="
+                width:100%;
+                height:48px;
+                border-radius:12px;
+                background:var(--bg-main);
+                border:1px solid #2a2a30;
+                color:#fff;
+                padding:0 44px 0 14px;
+                font-size:16px;
+                margin-bottom:16px;
+                text-align:left;
+                color-scheme: dark;
+                box-sizing:border-box;
+                line-height:48px;
+                display:block;
+            "
+        >
+
+        <span class="icon icon-calendar"
+              style="
+                position:absolute;
+                right:14px;
+                top:50%;
+                transform:translateY(-50%);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                pointer-events:none;
+                opacity:0.9;
+              ">
+        </span>
+
+    </div>
 
     <!-- NAPOMENA -->
     <label style="
@@ -190,11 +200,23 @@
 
 
 <style>
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width:100%;
+    box-sizing:border-box;
+    text-align:left;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+    text-align:left;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0;
     position: absolute;
     right: 0;
-    width: 40px;
+    width: 44px;
     height: 100%;
     cursor: pointer;
 }

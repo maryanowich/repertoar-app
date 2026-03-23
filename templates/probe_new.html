@@ -4,13 +4,13 @@
 {% block content %}
 
 
-<div style="margin:auto;padding:20px;background:#161618;background-image:none;min-height:100vh;">
+<div style="margin:auto;padding:20px;background:#161618;background-image:none;min-height:100vh;max-width:100%;overflow-x:hidden;">
 
 <!-- ACTION BAR -->
 <div class="action-bar"
      style="
         padding:16px;
-        top:88px;
+        top:16px;
         border-bottom:1px solid #222;
         background:#161618;
         display:flex;
@@ -75,7 +75,7 @@
         <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
             Datum *
         </label>
-        <div style="position:relative;">
+        <div style="position:relative; display:flex; align-items:center;">
             <input
                 type="date"
                 name="date"
@@ -87,27 +87,31 @@
                     background:#111;
                     border:1px solid #333;
                     color:#fff;
-                    padding:0 40px 0 14px;
+                    padding:0 44px 0 14px;
                     font-size:16px;
                     margin-bottom:16px;
                     color-scheme: dark;
+                    text-align:left;
+                    box-sizing:border-box;
+                    line-height:48px;
+                    display:block;
                 "
             >
 
             <span class="icon icon-calendar"
                   style="
-    position:absolute;
-    right:14px;
-    top:50%;
-    transform:translateY(-50%);
-    width:20px;
-    height:20px;
-    display:block;
-    line-height:20px;
-    pointer-events:none;
-    opacity:0.8;
-"
-                  >
+                      position:absolute;
+                      right:14px;
+                      top:50%;
+                      transform:translateY(-50%);
+                      width:20px;
+                      height:20px;
+                      display:flex;
+                      align-items:center;
+                      justify-content:center;
+                      pointer-events:none;
+                      opacity:0.9;
+                  ">
             </span>
         </div>
 
@@ -166,13 +170,33 @@
 </div>
 
 <style>
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width:100%;
+    box-sizing:border-box;
+    text-align:left;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+    text-align:left;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0;
     position: absolute;
     right: 0;
-    width: 40px;
+    width: 44px;
     height: 100%;
     cursor: pointer;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+* {
+    box-sizing: border-box;
 }
 </style>
 
