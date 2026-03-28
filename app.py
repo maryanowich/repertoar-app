@@ -17,7 +17,8 @@ def is_local_request():
 app = Flask(__name__)
 
 # 1) Add ACCESS_KEY after app = Flask(...)
-ACCESS_KEY = os.environ.get("ACCESS_KEY", "Manifesto2025")
+ACCESS_KEY = os.environ.get("ACCESS_KEY", "ID791_Visp")
+VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2025!")
 
 # simple session setup for role control
 app.secret_key = "repertoar-dev-key"
@@ -40,6 +41,7 @@ def set_default_session_values():
     # 2) Add access_granted and agreed session defaults
     if "access_granted" not in session:
         session["access_granted"] = False
+        session["role"] = None
 
     if "agreed" not in session:
         session["agreed"] = False
@@ -57,8 +59,11 @@ def auth_guard():
     if request.path.startswith("/access"):
         return
 
-    # DEV / LOCAL BYPASS
+    # DEV / LOCAL BYPASS (developer convenience)
     if is_local_request():
+        session["access_granted"] = True
+        if not session.get("role"):
+            session["role"] = "admin"
         return
 
     # require access key
@@ -220,17 +225,6 @@ def require_admin():
     if session.get("role") != "admin":
         abort(403)
 
-# ---------- ADMIN MODE (DEV / TEST) ----------
-@app.route("/admin")
-def admin_mode():
-    session["role"] = "admin"
-    return "Admin mode ON"
-
-# ---------- VIEWER MODE ----------
-@app.route("/viewer")
-def viewer_mode():
-    session["role"] = "viewer"
-    return "Viewer mode ON"
 
 # 4) New /access route after /viewer
 @app.route("/access", methods=["GET", "POST"])
@@ -238,13 +232,29 @@ def access_gate():
     if request.method == "POST":
         key = request.form.get("key")
         agree = request.form.get("agree")
+        remember = request.form.get("remember")
 
-        if key == ACCESS_KEY and agree == "on":
+        if agree == "on":
+
+            if key == ACCESS_KEY:
+                session["role"] = "admin"
+
+            elif key == VIEWER_KEY:
+                session["role"] = "viewer"
+
+            else:
+                return render_template("access.html", error="Neispravan ključ")
+
             session["access_granted"] = True
             session["agreed"] = True
+
+            # remember me (persistent session)
+            if remember == "on":
+                session.permanent = True
+
             return redirect("/")
 
-        return "Neispravan ključ ili morate prihvatiti uvjete"
+        return render_template("access.html", error="Neispravan ključ ili morate prihvatiti uvjete")
 
     return render_template("access.html")
 
@@ -637,7 +647,8 @@ def song_detail(song_id):
 @app.route("/song/add", methods=["GET", "POST"])
 def song_add():
     db = get_db()
-
+    require_admin()  # 🔒 SAMO ADMIN
+    
     if request.method == "POST":
 
         planned_mix = request.form.get("planned_mix")
@@ -2017,7 +2028,8 @@ def add_song_to_probe(rehearsal_id):
 @app.route("/probe/push/<int:song_id>", methods=["POST"])
 def push_song(song_id):
     db = get_db()
-
+    require_admin()  # 🔒 SAMO ADMIN
+    
     song = db.execute(
         "SELECT * FROM songs WHERE id = ?", (song_id,)
     ).fetchone()
@@ -2120,6 +2132,7 @@ def probe_reorder(rehearsal_id):
 @app.route("/repertoar/add", methods=["POST"])
 def add_song_to_repertoar():
     db = get_db()
+    require_admin()  # 🔒 SAMO ADMIN
 
     db.execute("""
         INSERT INTO songs (

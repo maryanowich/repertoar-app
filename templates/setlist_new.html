@@ -3,17 +3,13 @@
 
 {% block content %}
 
-<!-- WRAPPER -->
-<div style="
-    margin:auto;
-    padding:20px;
-">
+<div style="margin:auto;padding:16px;background:#161618;background-image:none;min-height:100vh;max-width:100%;overflow-x:hidden;">
 
 <!-- ACTION BAR -->
 <div class="action-bar"
      style="
         padding:16px;
-        top:16px;
+        top: 8px;
         border-bottom:1px solid #222;
         display:flex;
         justify-content:space-between;
@@ -36,38 +32,51 @@
 </div>
 
 <h3 style="
-    margin-bottom:12px;
+    margin-bottom:1px;
     display:flex;
     align-items:center;
     gap:10px;
-    font-weight:600;
+    font-weight:500;
     padding:16px;
     color:#777;
-    font-size:16px;
+    font-size:18px;
 ">
-    Izradi novu listu
+    Izradi novu set listu
 </h3>
+    <!-- FORMA -->
+    <form method="post" id="probeForm">
+    <!-- NAZIV PROBE -->
+    <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+        Naziv *
+    </label>
+    <input
+        type="text"
+        name="name"
+        form="probeForm"
+        placeholder="npr. Svadba, Domjenak"
+        required
+        style="
+            width:100%;
+            height:48px;
+            border-radius:12px;
+            background:#111;
+            border:1px solid #333;
+            color:#fff;
+            padding:0 14px;
+            font-size:16px;
+            margin-bottom:16px;
+        "
+    >
 
-    <form method="post">
-
+        <!-- DATUM -->
         <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
-            Naziv *
+            Datum *
         </label>
-        <input
-            type="text"
-            name="name"
-            required
-            placeholder="npr. Svadba, Klub, Gala "
-            style="width:100%;height:48px;border-radius:12px;background:#111;border:1px solid #333;color:#fff;padding:0 14px;font-size:16px;margin-bottom:16px;"
-        >
-
-        <label style="display:block;margin-bottom:6px;color:#aaa;gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
-            Datum
-        </label>
-        <div style="position:relative; display:flex; align-items:center; margin-bottom:16px;">
+        <div style="position:relative; display:flex; align-items:center;">
             <input
                 type="date"
                 name="date"
+                required
                 style="
                     width:100%;
                     height:48px;
@@ -77,6 +86,7 @@
                     color:#fff;
                     padding:0 44px 0 14px;
                     font-size:16px;
+                    margin-bottom:16px;
                     color-scheme: dark;
                     text-align:left;
                     box-sizing:border-box;
@@ -87,50 +97,69 @@
 
             <span class="icon icon-calendar"
                   style="
-                    position:absolute;
-                    right:14px;
-                    top:50%;
-                    transform:translateY(-50%);
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    pointer-events:none;
-                    opacity:0.9;
+                      position:absolute;
+                      right:14px;
+                      top:40%;
+                      transform:translateY(-50%);
+                      width:20px;
+                      height:20px;
+                      display:flex;
+                      align-items:center;
+                      justify-content:center;
+                      pointer-events:none;
+                      opacity:0.9;
                   ">
             </span>
         </div>
 
-        <label style="display:block;margin-bottom:6px;color:#aaa;gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
+        <!-- NAPOMENA -->
+        <label style="display:block;margin-bottom:6px;color:#aaa; gap: 10px;padding: 16px; font-weight:500; font-size:16px;">
             Napomena
         </label>
         <input
             type="text"
             name="note"
-            placeholder="npr. nova set lista"
-            style="width:100%;height:48px;border-radius:12px;background:#111;border:1px solid #333;color:#fff;padding:0 14px;font-size:16px;margin-bottom:20px;"
+            placeholder="npr. nova fešta, svadba, jazz session"
+            style="
+                width:100%;
+                height:48px;
+                border-radius:12px;
+                background:#111;
+                border:1px solid #333;
+                color:#fff;
+                padding:0 14px;
+                font-size:16px;
+                margin-bottom:20px;
+            "
         >
 
-        <div style="text-align:center;">
-            <button type="submit"
-    style="
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-        padding:12px 22px;
-        background:#1f1f23;
-        border:1px solid #2a2a30;
-        color:#fff;
-        border-radius:12px;
-        font-weight:600;
-        font-size:15px;
-        cursor:pointer;
-    ">
-    <span style="display:inline-flex;align-items:center;gap:8px;">
-        <span class="icon icon-save" style="width:16px;height:16px;background-color:currentColor;"></span>
-        Spremi
-    </span>
-</button>
+
+
+    <!-- BUTTON -->
+    <div style="text-align:center;">
+
+        <button type="submit"
+            style="
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:8px;
+                padding:12px 22px;
+                background:#1f1f23;
+                border:1px solid #2a2a30;
+                color:#fff;
+                border-radius:12px;
+                font-weight:600;
+                font-size:15px;
+                cursor:pointer;
+        ">
+
+            <span class="icon icon-save"
+                  style="width:16px;height:16px;background-color:currentColor;"></span>
+
+            Spremi
+
+        </button>
         </div>
 
     </form>
