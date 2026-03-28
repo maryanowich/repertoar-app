@@ -998,5 +998,64 @@ body:not(.read-mode) .mode-icon.light {
         });
     });
     </script>
+<script>
+// ===== WAKE LOCK =====
+let wakeLock = null;
+
+async function keepScreenOn() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock released');
+            });
+
+            console.log('Wake Lock active');
+        }
+    } catch (err) {
+        console.log('Wake Lock error:', err);
+    }
+}
+
+// re-activate when returning to tab
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        keepScreenOn();
+    }
+});
+
+// start on load
+document.addEventListener("DOMContentLoaded", keepScreenOn);
+</script>
+
+<script>
+// ===== SMART AUTO REFRESH =====
+(function () {
+    const path = window.location.pathname;
+
+    // only enable on live pages
+    if (path.includes("/probe") || path.includes("/setlist")) {
+
+        let lastActivity = Date.now();
+
+        // track user activity
+        ["touchstart", "click", "scroll"].forEach(evt => {
+            document.addEventListener(evt, () => {
+                lastActivity = Date.now();
+            }, { passive: true });
+        });
+
+        setInterval(() => {
+            const now = Date.now();
+
+            // refresh only if inactive 5s
+            if (now - lastActivity > 5000) {
+                window.location.reload();
+            }
+        }, 5000);
+    }
+})();
+</script>
 </body>
 </html>
