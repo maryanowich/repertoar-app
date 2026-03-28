@@ -26,9 +26,6 @@ app.secret_key = "repertoar-dev-key"
 # default session values for all visitors
 @app.before_request
 def set_default_session_values():
-    if "role" not in session:
-        session["role"] = "viewer"
-
     if "language" not in session:
         session["language"] = "hr"
 
@@ -41,7 +38,6 @@ def set_default_session_values():
     # 2) Add access_granted and agreed session defaults
     if "access_granted" not in session:
         session["access_granted"] = False
-        session["role"] = None
 
     if "agreed" not in session:
         session["agreed"] = False
@@ -340,7 +336,7 @@ def get_db():
     database_url = os.environ.get("DATABASE_URL")
 
     if database_url:
-        conn = psycopg2.connect(database_url)
+        conn = psycopg2.connect(database_url, sslmode="require")
     else:
         conn = psycopg2.connect(
             dbname=os.environ.get("PGDATABASE", "repertoar"),
