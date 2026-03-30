@@ -1030,7 +1030,7 @@ document.addEventListener("DOMContentLoaded", keepScreenOn);
 </script>
 
 <script>
-// ===== SMART AUTO REFRESH =====
+// ===== SMART AUTO REFRESH (SAFE VERSION) =====
 (function () {
     const path = window.location.pathname;
 
@@ -1038,21 +1038,54 @@ document.addEventListener("DOMContentLoaded", keepScreenOn);
     if (path.includes("/probe") || path.includes("/setlist")) {
 
         let lastActivity = Date.now();
+        let isSubmitting = false;
 
         // track user activity
-        ["touchstart", "click", "scroll"].forEach(evt => {
+        ["touchstart", "click", "scroll", "keydown", "input"].forEach(evt => {
             document.addEventListener(evt, () => {
                 lastActivity = Date.now();
             }, { passive: true });
         });
 
+        // detect typing / focus
+        function isUserTyping() {
+            const el = document.activeElement;
+            return el && (
+                el.tagName === "INPUT" ||
+                el.tagName === "TEXTAREA" ||
+                el.isContentEditable
+            );
+        }
+
+        // detect form submit
+        document.querySelectorAll("form").forEach(form => {
+            form.addEventListener("submit", () => {
+                isSubmitting = true;
+            });
+        });
+
+        // detect clicks (buttons / links)
+        document.querySelectorAll("button, a").forEach(el => {
+            el.addEventListener("click", () => {
+                isSubmitting = true;
+            });
+        });
+
         setInterval(() => {
             const now = Date.now();
 
-            // refresh only if inactive 5s
-            if (now - lastActivity > 5000) {
-                window.location.reload();
-            }
+            // ❌ do not refresh while typing
+            if (isUserTyping()) return;
+
+            // ❌ do not refresh while submitting
+            if (isSubmitting) return;
+
+            // ❌ do not refresh if user was active in last 15s
+            if (now - lastActivity < 15000) return;
+
+            // ✅ safe refresh
+            window.location.reload();
+
         }, 5000);
     }
 })();
