@@ -332,11 +332,14 @@ class DB:
 
 
 def get_db():
-    # Support Render / production DATABASE_URL
+
     database_url = os.environ.get("DATABASE_URL")
 
     if database_url:
-        conn = psycopg2.connect(database_url, sslmode="require")
+
+        # Neon već ima SSL parametre u URL-u → ne diraj
+
+        conn = psycopg2.connect(database_url)
     else:
         conn = psycopg2.connect(
             dbname=os.environ.get("PGDATABASE", "repertoar"),
