@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 # 1) Add ACCESS_KEY after app = Flask(...)
 ACCESS_KEY = os.environ.get("ACCESS_KEY", "ID791_Visp")
-VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2025!")
+VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2026!")
 
 # simple session setup for role control
 app.secret_key = "repertoar-dev-key"
