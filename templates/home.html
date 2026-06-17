@@ -183,11 +183,22 @@
         width:6px;
         height:6px;
         border-radius:50%;
-        background: {% if role == 'admin' %}#00ffe1{% else %}#888{% endif %};
+        background:
+        {% if role == 'admin' %}
+            #00ffe1
+        {% elif role == 'demo' %}
+            #ffb000
+        {% else %}
+            #888
+        {% endif %};
         display:inline-block;
     "></span>
 
-    {{ role|upper }}
+    {% if role == 'demo' %}
+        DEMO MODE
+    {% else %}
+        {{ role|upper }}
+    {% endif %}
 </a>
 {% endif %}
 

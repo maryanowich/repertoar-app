@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, abort, redirect, session, jsonify
+from datetime import timedelta
 from werkzeug.utils import secure_filename
 import psycopg2
 import psycopg2.extras
@@ -16,9 +17,13 @@ def is_local_request():
 
 app = Flask(__name__)
 
+# Set session lifetime for permanent sessions (e.g. demo)
+app.permanent_session_lifetime = timedelta(minutes=30)
+
 # 1) Add ACCESS_KEY after app = Flask(...)
 ACCESS_KEY = os.environ.get("ACCESS_KEY", "ID791_Visp")
 VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2026!")
+DEMO_ENABLED = os.environ.get("DEMO_ENABLED", "true")
 
 # simple session setup for role control
 app.secret_key = "repertoar-dev-key"
@@ -41,6 +46,10 @@ def set_default_session_values():
 
     if "agreed" not in session:
         session["agreed"] = False
+
+    # demo sessions expire after inactivity
+    if session.get("role") == "demo":
+        session.permanent = True
 
 
 # 5) Auth guard after set_default_session_values
@@ -216,9 +225,15 @@ def t(key):
 def inject_translator():
     return {"t": t}
 
+
 # helper for admin-only routes
 def require_admin():
     if session.get("role") != "admin":
+        abort(403)
+
+# helper for routes that should be blocked only for public demo users
+def require_write_access():
+    if session.get("role") == "demo":
         abort(403)
 
 
@@ -253,6 +268,29 @@ def access_gate():
         return render_template("access.html", error="Neispravan ključ ili morate prihvatiti uvjete")
 
     return render_template("access.html")
+
+# ---------- PUBLIC DEMO ----------
+@app.route("/demo")
+def demo_login():
+
+    if DEMO_ENABLED.lower() != "true":
+        abort(404)
+
+    session["access_granted"] = True
+    session["agreed"] = True
+    session["role"] = "demo"
+
+    return redirect("/")
+
+# ---------- ROBOTS.TXT ----------
+@app.route("/robots.txt")
+def robots_txt():
+    return (
+        "User-agent: *\n"
+        "Disallow: /\n",
+        200,
+        {"Content-Type": "text/plain"}
+    )
 
 # ---------- SETTINGS: LANGUAGE ----------
 @app.route("/settings/language/<lang>", methods=["POST"])
@@ -646,6 +684,7 @@ def song_detail(song_id):
 @app.route("/song/add", methods=["GET", "POST"])
 def song_add():
     db = get_db()
+    require_write_access()
     require_admin()  # 🔒 SAMO ADMIN
     
     if request.method == "POST":
@@ -728,6 +767,7 @@ def song_add():
 @app.route("/repertoar/<int:song_id>/edit", methods=["GET", "POST"])
 def edit_song_repertoar(song_id):
     db = get_db()
+    require_write_access()
     require_admin()
 
     # 🔹 Dohvati pjesmu + ime mixa (BITNO!)
@@ -835,6 +875,7 @@ def edit_song_repertoar(song_id):
 @app.route("/repertoar/<int:song_id>/delete", methods=["POST", "GET"])
 def delete_song_repertoar(song_id):
     db = get_db()
+    require_write_access()
     require_admin()
 
     song = db.execute(
@@ -861,6 +902,7 @@ def delete_song_repertoar(song_id):
 @app.route("/song/<int:song_id>/edit", methods=["GET", "POST"])
 def edit_song(song_id):
     db = get_db()
+    require_write_access()
     song = db.execute(
         "SELECT * FROM songs WHERE id = ?", (song_id,)
     ).fetchone()
@@ -1088,6 +1130,7 @@ def mixes():
 @app.route("/mix/new", methods=["GET", "POST"])
 def mix_new():
     db = get_db()
+    require_write_access()
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -1123,6 +1166,7 @@ def mix_new():
 @app.route("/mix/<int:mix_id>/edit", methods=["GET", "POST"])
 def mix_edit(mix_id):
     db = get_db()
+    require_write_access()
 
     # DOHVAT MIXA
     mix = db.execute(
@@ -1188,6 +1232,7 @@ def mix_edit(mix_id):
 @app.route("/mix/<int:mix_id>/reorder", methods=["POST"])
 def mix_reorder(mix_id):
     db = get_db()
+    require_write_access()
 
     data = request.get_json()
     order = data.get("order")
@@ -1214,6 +1259,7 @@ def mix_reorder(mix_id):
 @app.route("/mix/<int:mix_id>/add", methods=["GET", "POST"])
 def mix_add(mix_id):
     db = get_db()
+    require_write_access()
 
     mix = db.execute(
         "SELECT * FROM mixes WHERE id = ?",
@@ -1288,6 +1334,7 @@ def mix_add(mix_id):
 @app.route("/mix/<int:mix_id>/add_song", methods=["POST"])
 def mix_add_song(mix_id):
     db = get_db()
+    require_write_access()
 
     song_id = request.form.get("song_id")
     if not song_id:
@@ -1320,6 +1367,7 @@ def mix_add_song(mix_id):
 @app.route("/mix/<int:mix_id>/remove/<int:song_id>", methods=["POST"])
 def mix_remove_song(mix_id, song_id):
     db = get_db()
+    require_write_access()
 
     db.execute(
         "UPDATE songs SET mix_id = NULL WHERE id = ? AND mix_id = ?",
@@ -1333,6 +1381,7 @@ def mix_remove_song(mix_id, song_id):
 @app.route("/mix/<int:mix_id>/lyrics/<int:song_id>", methods=["POST"])
 def save_mix_lyrics(mix_id, song_id):
     db = get_db()
+    require_write_access()
 
     lyrics = request.form.get("mix_lyrics")
     if lyrics is None:
@@ -1481,6 +1530,7 @@ def probe_list():
 # ---------- NOVA PROBA ----------
 @app.route("/probe/new", methods=["GET", "POST"])
 def probe_new():
+    require_write_access()
     if request.method == "POST":
         name = request.form.get("name")
         date = request.form.get("date")
@@ -1513,6 +1563,7 @@ def probe_new():
 @app.route("/probe/<int:rehearsal_id>/edit", methods=["GET", "POST"])
 def probe_edit(rehearsal_id):
     db = get_db()
+    require_write_access()
 
     rehearsal = db.execute(
         "SELECT * FROM rehearsals WHERE id=?",
@@ -1554,6 +1605,7 @@ def probe_edit(rehearsal_id):
 @app.route("/probe/<int:rehearsal_id>/delete", methods=["POST"])
 def delete_probe(rehearsal_id):
     db = get_db()
+    require_write_access()
 
     # prvo obriši povezane pjesme
     db.execute(
@@ -1751,6 +1803,7 @@ def probe_detail(rehearsal_id):
 @app.route("/probe/<int:rehearsal_id>/add_item", methods=["POST"])
 def add_song_to_probe(rehearsal_id):
     db = get_db()
+    require_write_access()
 
     # -------------------------------------------------
     # GET → otvoriti biblioteku pjesama za dodavanje
@@ -2066,6 +2119,7 @@ def push_song(song_id):
 @app.route("/probe/<int:rehearsal_id>/remove/<int:song_id>", methods=["POST"])
 def remove_song_from_probe(rehearsal_id, song_id):
     db = get_db()
+    require_write_access()
 
     db.execute(
         "DELETE FROM rehearsal_songs WHERE rehearsal_id=? AND song_id=?",
@@ -2079,6 +2133,7 @@ def remove_song_from_probe(rehearsal_id, song_id):
 @app.route("/probe/<int:rehearsal_id>/remove_mix/<int:mix_id>", methods=["POST"])
 def remove_mix_from_probe(rehearsal_id, mix_id):
     db = get_db()
+    require_write_access()
 
     # remove ALL songs that belong to this mix from rehearsal
     db.execute("""
@@ -2097,6 +2152,7 @@ def remove_mix_from_probe(rehearsal_id, mix_id):
 @app.route("/probe/<int:rehearsal_id>/reorder", methods=["POST"])
 def probe_reorder(rehearsal_id):
     db = get_db()
+    require_write_access()
 
     data = request.get_json()
     order = data.get("order")
@@ -2183,6 +2239,7 @@ def setlists():
 # ---------- NOVA SET LISTA ----------
 @app.route("/setlist/new", methods=["GET", "POST"])
 def setlist_new():
+    require_write_access()
 
     if request.method == "POST":
 
@@ -2363,6 +2420,7 @@ def setlist_item_view(setlist_id, item_id):
 @app.route("/setlist/<int:setlist_id>/edit", methods=["GET", "POST"])
 def setlist_edit(setlist_id):
     db = get_db()
+    require_write_access()
 
     setlist = db.execute(
         "SELECT * FROM setlists WHERE id=?",
