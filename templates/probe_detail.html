@@ -209,7 +209,7 @@
                 {% if song.status != 'repertoar' %}
                     <!-- PUSH TO REPERTOAR (OPASNO, NE MIJENJATI LOGIKU) -->
                     <form method="post"
-                          action="/probe/push/{{ song.id }}"
+                          action="/probe/push/{{ song.song_id }}"
                           onclick="event.stopPropagation();">
 
                         <button class="action-btn check"
