@@ -64,6 +64,17 @@ def auth_guard():
     if request.path.startswith("/access"):
         return
 
+    # allow public demo login
+    if request.path.startswith("/demo"):
+        return
+
+    # allow robots and health checks
+    if request.path == "/robots.txt":
+        return
+
+    if request.path.startswith("/health"):
+        return
+
     # DEV / LOCAL BYPASS (developer convenience)
     if is_local_request():
         session["access_granted"] = True
