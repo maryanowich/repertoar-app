@@ -303,6 +303,11 @@ def robots_txt():
         {"Content-Type": "text/plain"}
     )
 
+# ---------- HEALTH ----------
+@app.route("/health")
+def health():
+    return "OK", 200
+
 # ---------- SETTINGS: LANGUAGE ----------
 @app.route("/settings/language/<lang>", methods=["POST"])
 def set_language(lang):
