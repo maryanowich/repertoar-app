@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, abort, redirect, session, jsonify
-from datetime import timedelta
 from werkzeug.utils import secure_filename
 import psycopg2
 import psycopg2.extras
@@ -17,8 +16,6 @@ def is_local_request():
 
 app = Flask(__name__)
 
-# Set session lifetime for permanent sessions (e.g. demo)
-app.permanent_session_lifetime = timedelta(minutes=30)
 
 # 1) Add ACCESS_KEY after app = Flask(...)
 ACCESS_KEY = os.environ.get("ACCESS_KEY", "ID791_Visp")
@@ -47,9 +44,6 @@ def set_default_session_values():
     if "agreed" not in session:
         session["agreed"] = False
 
-    # demo sessions expire after inactivity
-    if session.get("role") == "demo":
-        session.permanent = True
 
 
 # 5) Auth guard after set_default_session_values
@@ -74,6 +68,20 @@ def auth_guard():
 
     if request.path.startswith("/health"):
         return
+    
+    # demo session timeout (8h only)
+    if session.get("role") == "demo":
+        import time
+
+        started = session.get("demo_started")
+
+        if not started:
+            session.clear()
+            return redirect("/access")
+
+        if time.time() - started > 28800:  # 8 sati
+            session.clear()
+            return redirect("/access")
 
     # DEV / LOCAL BYPASS (developer convenience)
     if is_local_request():
@@ -287,9 +295,12 @@ def demo_login():
     if DEMO_ENABLED.lower() != "true":
         abort(404)
 
+    import time
+
     session["access_granted"] = True
     session["agreed"] = True
     session["role"] = "demo"
+    session["demo_started"] = time.time()
 
     return redirect("/")
 
