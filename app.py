@@ -647,6 +647,11 @@ def song_detail(song_id):
     if not song:
         abort(404)
 
+    # Instrumentalne pjesme s PDF-om otvaraju aranžman direktno
+    if song["is_instrumental"] and song["score_pdf"]:
+        pdf_path = song["score_pdf"].replace("static/", "")
+        return redirect(f"/static/{pdf_path}")
+
     from_param = request.args.get("from")
     set_id = request.args.get("set")
 
@@ -936,6 +941,7 @@ def edit_song(song_id):
     if not song:
         abort(404)
 
+
     rehearsal = db.execute("""
         SELECT r.*
         FROM rehearsals r
@@ -946,6 +952,7 @@ def edit_song(song_id):
 
     # determine where user came from
     back_url = request.args.get("from") or request.referrer or "/repertoar"
+    
 
     if request.method == "POST":
         db.execute("""
