@@ -79,7 +79,7 @@ def auth_guard():
             session.clear()
             return redirect("/access")
 
-        if time.time() - started > 28800:  # 8 sati
+        if time.time() - started > 600:  # 10 min
             session.clear()
             return redirect("/access")
 
