@@ -3,6 +3,8 @@
 
 {% block content %}
 
+{% if not edit_song %}
+
 <!-- ACTION BAR (SETLIST DETAIL) -->
 <div class="action-bar"
      style="
@@ -264,6 +266,8 @@
 
 <!-- END sortableList -->
 </div>
+
+{% endif %}
 
 <!-- ADD / EDIT SONG FORM -->
 <div id="add-song-form"
@@ -606,56 +610,67 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
-new Sortable(document.getElementById('sortableList'), {
-    animation: 200,
-    delay: 300,
-    delayOnTouchOnly: true,
-    touchStartThreshold: 5,
-    handle: '.song-main',
-    ghostClass: 'drag-ghost',
-    chosenClass: 'drag-chosen',
-
-    filter: '.action-btn',
-    preventOnFilter: false,
-
-    onEnd: function () {
-
-        let order = [];
-
-        document.querySelectorAll('.draggable-item').forEach(el => {
-            order.push(el.dataset.id);
-        });
-
-        fetch("/probe/{{ rehearsal.id }}/reorder", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ order: order })
-        }).then(() => location.reload());
-    }
-});
-</script>
-
-<!-- TAP HANDLER -->
-<script>
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.clickable').forEach(el => {
-        el.addEventListener('click', function () {
+
+    const sortableList = document.getElementById("sortableList");
+
+    if (sortableList) {
+        new Sortable(sortableList, {
+            animation: 200,
+            delay: 300,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+            handle: ".song-main",
+            ghostClass: "drag-ghost",
+            chosenClass: "drag-chosen",
+
+            filter: ".action-btn",
+            preventOnFilter: false,
+
+            onEnd: function () {
+
+                let order = [];
+
+                document.querySelectorAll(".draggable-item").forEach(el => {
+                    order.push(el.dataset.id);
+                });
+
+                fetch("/probe/{{ rehearsal.id }}/reorder", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        order: order
+                    })
+                }).then(() => location.reload());
+            }
+        });
+    }
+
+    // TAP HANDLER
+    document.querySelectorAll(".clickable").forEach(el => {
+        el.addEventListener("click", function () {
             const url = this.dataset.href;
-            if (url) window.location.href = url;
+            if (url) {
+                window.location.href = url;
+            }
         });
     });
+
 });
 </script>
 
 <style>
 .drag-chosen {
-    background:#222 !important;
+    background: #222 !important;
     transform: scale(1.02);
     box-shadow: 0 0 14px rgba(0,255,225,0.4);
 }
 
 .drag-ghost {
-    opacity:0.4;
+    opacity: 0.4;
 }
 </style>
+
 {% endblock %}
