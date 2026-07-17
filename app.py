@@ -935,26 +935,35 @@ def delete_song_repertoar(song_id):
 def edit_song(song_id):
     db = get_db()
     require_write_access()
-    song = db.execute(
-        "SELECT * FROM songs WHERE id = ?", (song_id,)
-    ).fetchone()
+
+    song = db.execute("""
+        SELECT
+            s.*,
+            rs.version_link AS youtube_link
+        FROM songs s
+        LEFT JOIN rehearsal_songs rs
+            ON rs.song_id = s.id
+        WHERE s.id = ?
+        LIMIT 1
+    """, (song_id,)).fetchone()
+
     if not song:
         abort(404)
-
 
     rehearsal = db.execute("""
         SELECT r.*
         FROM rehearsals r
-        JOIN rehearsal_songs rs ON rs.rehearsal_id = r.id
+        JOIN rehearsal_songs rs
+            ON rs.rehearsal_id = r.id
         WHERE rs.song_id = ?
         LIMIT 1
     """, (song_id,)).fetchone()
 
     # determine where user came from
     back_url = request.args.get("from") or request.referrer or "/repertoar"
-    
 
     if request.method == "POST":
+
         db.execute("""
             UPDATE songs
             SET
@@ -989,23 +998,43 @@ def edit_song(song_id):
             song_id
         ))
 
+        if rehearsal:
+            db.execute("""
+                UPDATE rehearsal_songs
+                SET version_link = ?
+                WHERE rehearsal_id = ? AND song_id = ?
+            """, (
+                request.form.get("youtube_link"),
+                rehearsal["id"],
+                song_id
+            ))
+
         db.commit()
+
         if rehearsal:
             return redirect(f"/probe/{rehearsal['id']}")
+
         return redirect(back_url)
 
     songs = []
+
     if rehearsal:
         songs = db.execute("""
             SELECT s.*
             FROM songs s
-            JOIN rehearsal_songs rs ON rs.song_id = s.id
+            JOIN rehearsal_songs rs
+                ON rs.song_id = s.id
             WHERE rs.rehearsal_id = ?
             ORDER BY s.title
         """, (rehearsal["id"],)).fetchall()
 
-    mixes = db.execute("SELECT name FROM mixes ORDER BY name").fetchall()
-    artists = db.execute("SELECT DISTINCT artist FROM songs ORDER BY artist").fetchall()
+    mixes = db.execute(
+        "SELECT name FROM mixes ORDER BY name"
+    ).fetchall()
+
+    artists = db.execute(
+        "SELECT DISTINCT artist FROM songs ORDER BY artist"
+    ).fetchall()
 
     if rehearsal:
         return render_template(
