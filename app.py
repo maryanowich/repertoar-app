@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 # 1) Add ACCESS_KEY after app = Flask(...)
 ACCESS_KEY = os.environ.get("ACCESS_KEY", "ID791_Visp")
-VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2026!")
+VIEWER_KEY = os.environ.get("VIEWER_KEY", "Manifesto2026-")
 DEMO_ENABLED = os.environ.get("DEMO_ENABLED", "true")
 
 # simple session setup for role control
