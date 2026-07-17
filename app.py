@@ -800,7 +800,7 @@ def song_add():
 def edit_song_repertoar(song_id):
     db = get_db()
     require_write_access()
-    require_admin()
+    
 
     # 🔹 Dohvati pjesmu + ime mixa (BITNO!)
     song = db.execute("""
